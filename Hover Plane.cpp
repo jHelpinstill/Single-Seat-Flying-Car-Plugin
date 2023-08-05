@@ -23,6 +23,8 @@
 #include "Aircraft.h"
 #include "PluginSetup.h"
 
+///// THIS SHOULD ONLY APPEAR IN THE "PID OVERHAUL" BRANCH ON GITHUB /////
+
 
 void doHover()
 {
