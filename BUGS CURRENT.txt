@@ -1,0 +1,3 @@
+AUTOPILOT:
+Heading hold Fails:
+	passes target and holds bank forever

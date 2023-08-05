@@ -1,0 +1,609 @@
+
+
+/*
+void local_vels(float& t_vel, float& n_vel) {
+	float x_vel = XPLMGetDataf(vx);
+	float z_vel = XPLMGetDataf(vz);
+
+	float heading = XPLMGetDataf(psi);
+	float delta_time = XPLMGetDataf(frame_time);
+
+	float angle = (360.0 - static_cast<double>(heading)) * 3.14159 / 180;
+	t_vel = (z_vel * cos(angle) + x_vel * sin(angle));
+	n_vel = -(z_vel * sin(angle) - x_vel * cos(angle));
+}
+
+float get_lever_pos(int lever_axis_index) {
+	float throttle_lever[1];
+
+	XPLMGetDatavf(joystickThrottleAxis, throttle_lever, lever_axis_index, 1); //get position of throttle lever on joystick
+	return 1 - throttle_lever[0];
+}
+
+float get_axis_pos(int axis_index) {
+	float lever[1];
+
+	XPLMGetDatavf(joystickThrottleAxis, lever, axis_index, 1);
+	return lever[0];
+}
+
+void throttle_handler(float hover_throttle, float fwd_throttle) {
+	float commanded_throttle[6];
+
+	commanded_throttle[0] = fwd_throttle;
+	commanded_throttle[1] = fwd_throttle;
+
+	for (int i = 2; i < 6; i++)
+		commanded_throttle[i] = hover_throttle;
+
+	XPLMSetDatavf(throttle_ratio, commanded_throttle, 0, 6);
+}
+
+float calc_hover_throttle(float lever_pos, float ground_spd, float& rate_out, float& des_rate_out, float* errors) {
+	static float prev_alt{};
+	static float prev_error{};
+	static double error_accumulator{};
+
+	//if (XPLMGetDataf(ground_speed) < 60) {
+	float alt = XPLMGetDataf(MSL_elevation);
+	float agl = XPLMGetDataf(alt_agl_handle);
+	float max_rate = 10;
+	if (agl > 30) {
+		max_rate += (agl - 30) / 10;
+	}
+
+	if (XPLMGetDataf(thrust_vctr) == 0)
+		XPLMSetDataf(thrust_vctr, 0.033);
+	float theta = XPLMGetDataf(pitch);
+	float phi = XPLMGetDataf(roll);
+
+	float delta_time = XPLMGetDataf(frame_time);
+	if (delta_time == 0)
+		return 0;
+
+	float mapped_pos;
+	if (lever_pos >= 0.45 && lever_pos <= 0.55) {
+		mapped_pos = 0.5;
+	}
+	else if (lever_pos > 0.55)
+		mapped_pos = lever_pos - 0.05;
+	else
+		mapped_pos = lever_pos + 0.05;
+
+	mapped_pos = (mapped_pos * 2 - 1);
+	if (mapped_pos > 0)
+		mapped_pos = pow(mapped_pos, 1.5);
+	else
+		mapped_pos = -pow(-mapped_pos, 1.5);
+
+	float rate = (alt - prev_alt) / delta_time;
+	prev_alt = alt;
+
+	float desired_rate = max_rate * mapped_pos;
+
+	rate_out = rate;
+	des_rate_out = desired_rate;
+
+	double error = desired_rate - rate;
+	double error_rate = (error - prev_error) / delta_time;
+	prev_error = error;
+	error_accumulator += error * delta_time;
+
+	if (error_accumulator > 20 || error_accumulator < -20) {
+		if (error_accumulator > 20)
+			error_accumulator = 20;
+		if (error_accumulator < -20)
+			error_accumulator = -20;
+	}
+
+	if (XPLMGetDataf(gear_nml_forces) > 0.0f) {
+		error_accumulator = 0;
+	}
+
+	float throttle = bias + error * PID[0][0] + error_accumulator * PID[0][1] + error_rate * PID[0][2];
+
+	errors[0] = error;
+	errors[1] = error_accumulator;
+	errors[2] = error_rate;
+
+	double cosine_compensation = 1 / cos(theta * 3.14159 / 180) / cos(phi * 3.14159 / 180);
+
+
+	if (throttle >= 0 && throttle <= 1)
+		return throttle * cosine_compensation;
+	else if (throttle < 0)
+		return 0;
+	else
+		return 1;
+	//}
+	if (XPLMGetDataf(thrust_vctr))
+		XPLMSetDataf(thrust_vctr, 0);
+	return 0;
+}
+
+float calc_fwd_throttle(float lever_pos, float ground_spd) {
+	return lever_pos;
+
+	float alt = XPLMGetDataf(alt_agl_handle);
+	float speed = XPLMGetDataf(ground_speed);
+
+	if (alt > 35) {
+		if (speed > 50) {
+			float brake = 1 - 2.66667 * lever_pos;
+			if (brake < 0)
+				brake = 0;
+			XPLMSetDataf(spd_brk, brake);
+			if (lever_pos > 0.375)
+				return 1.6 * lever_pos - 0.6;
+			return 0;
+		}
+		float vect = (1 - XPLMGetDataf(thrust_vctr));
+		if (vect > 0.5)
+			return 2 * (vect - 0.5);
+	}
+	return 0.0f;
+}
+
+void draw_PID(int l, int t, int r, int b, float* data, int offset) {
+	float col_white[] = { 1.0, 1.0, 1.0 };
+	XPLMDrawString(col_white, l + 10, t - 58, "P", NULL, xplmFont_Proportional);
+	XPLMDrawString(col_white, l + 10, t - 78, "I", NULL, xplmFont_Proportional);
+	XPLMDrawString(col_white, l + 10, t - 98, "D", NULL, xplmFont_Proportional);
+
+	for (int i = 0; i < 3; i++)
+		XPLMDrawNumber(col_white, l + offset, t - 60 - 20 * i, data[i], 2, 2, 1, xplmFont_Proportional);
+
+}
+
+void yoke_handler(float* errors_pitch, float* errors_roll) {
+
+	XPLMSetDatai(override_pitch, 0);
+	XPLMSetDatai(override_roll, 0);
+	static float prev_error[2] = { 0,0 };
+	static float accumulator[2] = { 0,0 };
+
+	if (XPLMGetDataf(gear_nml_forces) > 0.0f) {
+		accumulator[0] = 0;
+		accumulator[1] = 0;
+	}
+
+
+	if (XPLMGetDataf(alt_agl_handle) < 10) {
+		XPLMSetDatai(override_pitch, 1);
+		XPLMSetDatai(override_roll, 1);
+		float delta_time = XPLMGetDataf(frame_time);
+
+		float vel[2];
+		local_vels(vel[0], vel[1]);
+
+		for (int axis = 0; axis < 2; axis++) {
+			float lever_pos = (2 * get_axis_pos(25 + axis) - 1);
+			float desired = lever_pos;
+			if (desired > 0)
+				desired = pow(desired, 2);
+			else
+				desired = -pow(-desired, 2);
+			desired *= 5;
+
+			float error = desired - vel[axis];
+			float error_rate = (error - prev_error[axis]) / delta_time;
+			accumulator[axis] += error * delta_time;
+
+			float result = error * PID[1][0] + accumulator[axis] * PID[1][1] + error_rate * PID[1][2];
+			if (result > 1)
+				result = 1;
+			else if (result < -1)
+				result = -1;
+
+			result = 0.5 * (static_cast<double>(result) + lever_pos);
+
+
+			XPLMSetDataf(yoke[axis], result);
+
+
+
+
+			if (axis) {
+				errors_roll[0] = error;
+				errors_roll[1] = accumulator[axis];
+				errors_roll[2] = error_rate;
+			}
+			else {
+				errors_pitch[0] = error;
+				errors_pitch[1] = accumulator[axis];
+				errors_pitch[2] = error_rate;
+			}
+		}
+	}
+}
+*/
+
+
+
+
+void stowProps(bool stowed)
+{
+	XPLMSetDataf(thrust_vctr, stowed);
+	if (stowed)
+	{
+		int keys[3] = { 0, 0, 0 };
+		XPLMSetDatavi(engine_running, keys, 2, 3);
+		XPLMSetDatavi(ignition_key, keys, 2, 3);
+		XPLMSetDatavi(fuel_pump_on, keys, 2, 3);
+		float zeroSpd[3] = { 0,0,0 };
+		XPLMSetDatavf(engine_speed, zeroSpd, 2, 3);
+		XPLMSetDatavf(throttle_override, zeroSpd, 2, 3);
+		XPLMSetDatavf(engine_amps, zeroSpd, 2, 3);
+		XPLMSetDatavi(ignition_key, keys, 0, 2); // activate pushers
+		
+	}
+	else
+	{
+		int keys[3] = { 4, 4, 4 };
+		XPLMSetDatavi(ignition_key, keys, 2, 3);
+	}
+	
+}
+
+int shutDownHoverWhenHidden(float fwd_throttle) {
+	static bool on = true;
+	float vector = XPLMGetDataf(thrust_vctr);
+	if (vector > 0.999 && on) {
+		int keys[4] = { 0, 0, 0, 0 };
+		XPLMSetDatavi(ignition, keys, 2, 4);
+		XPLMSetDatavi(fuel_pump_on, keys, 2, 4);
+		on = false;
+		return 1;
+	}
+	else if(vector <= 0.999 && !on){
+		int keys[4] = { 4, 4, 4, 4 };
+		XPLMSetDatavi(ignition_key, keys, 2, 4);
+		on = true;
+	}
+	return 0;
+}
+
+void setLiftFanAngle(int prop, float pitch, float roll)
+{
+	XPLMSetDatavf(acf_vertcant, &pitch, prop, 1);
+	XPLMSetDatavf(acf_sidecant, &roll, prop, 1);
+}
+
+float sideCantProps(int prop, float yokeRatio)
+{
+	
+	float angle[1];
+	float throttle[1];
+	angle[0] = yokeRatio * XPLMGetDataf(yoke[1]);
+	XPLMSetDatavf(acf_sidecant, angle, prop, 1);
+
+	/*Set throttle to compensate for cosine losses*/
+	XPLMGetDatavf(throttle_ratio, throttle, prop, 1);
+	throttle[0] /= cos(angle[0] * deg2rad);
+	if (throttle[0] > 1) throttle[0] = 1;
+	if (throttle[0] < 0) throttle[0] = 0;
+	XPLMSetDatavf(throttle_ratio, throttle, prop, 1);
+
+	return angle[0];
+}
+
+float vertCantProps(int prop, float yokeRatio)
+{
+
+	float angle[1];
+	float throttle[1];
+	angle[0] = yokeRatio * XPLMGetDataf(yoke[0]);
+	XPLMSetDatavf(acf_vertcant, angle, prop, 1);
+
+	/*Set throttle to compensate for cosine losses*/
+	XPLMGetDatavf(throttle_ratio, throttle, prop, 1);
+	throttle[0] /= cos(angle[0] * deg2rad);
+	if (throttle[0] > 1) throttle[0] = 1;
+	if (throttle[0] < 0) throttle[0] = 0;
+	XPLMSetDatavf(throttle_ratio, throttle, prop, 1);
+
+	return angle[0];
+}
+
+float getCosCorrection()
+{
+	return 1 / (cos(XPLMGetDataf(pitch) * deg2rad) * cos(XPLMGetDataf(roll) * deg2rad));
+}
+
+float getWeight()
+{
+	return XPLMGetDataf(total_mass) * 9.81;
+}
+
+float sigmoid(float value, float power = 1)
+{
+	return 1 / (1 + exp(-power * value));
+}
+
+void holdHoverThrust(float desiredThrust, float* dataOut = nullptr, std::string* dataNames = nullptr, int whichPropData = 0)
+{
+	const float maxThrust = 8138;
+	static PID thrustPID(3, 0.015, 3, 10000);
+
+	float data[10]{};
+	float dt = XPLMGetDataf(frame_time);
+	if (dt == 0) return;
+
+	XPLMGetDatavf(prop_thrust, data, 2, 3);
+	float currentThrust = 0;
+	for (int i = 0; i < 3; i++)
+		currentThrust += data[i];
+	
+	float newThrottle = (sigmoid(thrustPID.update(desiredThrust, currentThrust, dt)*0.002));
+
+	data[0] = data[1] = data[2] = newThrottle;
+	XPLMSetDatavf(throttle_ratio, data, 2, 3);
+	if (dataOut != nullptr && dataNames != nullptr)
+	{
+		dataOut[0] = 0;						dataNames[0] = "holdPropThrust";
+		dataOut[1] = (desiredThrust / 4.44822)*3780/8138;			dataNames[1] = "desired thrust";
+		dataOut[2] = currentThrust;					dataNames[2] = "current thrust";
+		dataOut[3] = thrustPID.error;			dataNames[3] = "thrust error";
+		dataOut[4] = thrustPID.errorRate;		dataNames[4] = "thrust rate of error";
+		dataOut[5] = thrustPID.accumulator;	dataNames[5] = "accumulation of error";
+		dataOut[6] = data[0];	dataNames[6] = "out to throttle";
+	}
+}
+
+bool holdVVI(float throttle, bool resetPID, float* dataOut = nullptr, std::string* dataNames = nullptr)
+{
+	const float maxVVI = 10;
+	const float minTime2Impact = 1;
+	const float minVVIforImpactPrevention = -0.3;
+	const float maxDeltaVVI = 5;
+
+	static PID VVIPID(0.15, 0.2, 0.02, 1000);
+	if (resetPID) VVIPID.reset();
+	float data[10]{};
+	float dt = XPLMGetDataf(frame_time);
+	if (dt == 0) return false;
+
+	float vvi = XPLMGetDataf(vertical_velocity);
+
+	static float prevDesiredVVI;
+	float desiredVVI = throttle * maxVVI;
+	if ((desiredVVI - prevDesiredVVI) / dt < -maxDeltaVVI) desiredVVI = prevDesiredVVI - maxDeltaVVI * dt;
+	if ((desiredVVI - prevDesiredVVI) / dt > maxDeltaVVI) desiredVVI = prevDesiredVVI + maxDeltaVVI * dt;
+	prevDesiredVVI = desiredVVI;
+
+	float minSafeVVI = -XPLMGetDataf(alt_agl_handle) / minTime2Impact;
+	float clampingVVI = false;
+	if (vvi < minVVIforImpactPrevention)
+	{
+		if (minSafeVVI > desiredVVI)
+		{
+			desiredVVI = minSafeVVI;
+			clampingVVI = true;
+			VVIPID.accumulator = 0;
+		}
+	}
+	//data[0] = data[1] = data[2] = VVIPID.update(desiredVVI, vvi, dt) * getCosCorrection();
+	//XPLMSetDatavf(throttle_ratio, data, 2, 3);
+
+	float valueOut = VVIPID.update(desiredVVI, vvi, dt);
+	holdHoverThrust(getWeight() * (1 + valueOut) * getCosCorrection());
+	if (dataOut != nullptr && dataNames != nullptr)
+	{
+		dataOut[0] = valueOut;										dataNames[0] = "holdVVI";
+		dataOut[1] = desiredVVI;							dataNames[1] = "desiredVVI";
+		dataOut[2] = vvi;									dataNames[2] = "current vvi";
+		dataOut[3] = VVIPID.error;							dataNames[3] = "vvi error";
+		dataOut[4] = VVIPID.errorRate;						dataNames[4] = "vvi rate of error";
+		dataOut[5] = VVIPID.accumulator;					dataNames[5] = "accumulation of error";
+		dataOut[6] = -XPLMGetDataf(alt_agl_handle) / vvi;	dataNames[6] = "time to impact";
+		dataOut[7] = clampingVVI ? 1.0 : 0.0;				dataNames[7] = "clamping vvi?";
+	}
+	return clampingVVI;
+}
+
+void holdAGL(float throttle, bool reset = false, float* dataOut = nullptr, std::string* dataNames = nullptr)
+{
+	static PID aglPID(1.8, 2, 0.1, 1000);
+	if (reset) aglPID.reset();
+	float data[10]{};
+	float dt = XPLMGetDataf(frame_time);
+	if (dt == 0) return;
+
+	float agl = XPLMGetDataf(alt_agl_handle);
+
+	static float desiredAlt{};
+	desiredAlt += throttle * dt * (throttle > 0 ? 10 : 5);
+	if (reset) desiredAlt = agl;
+	if (desiredAlt < 0) desiredAlt = 0;
+
+
+	float outThrottle = aglPID.update(desiredAlt, agl, dt);
+	holdHoverThrust(getWeight() * (1 + outThrottle) * getCosCorrection());
+
+	if (dataOut != nullptr && dataNames != nullptr)
+	{
+		dataOut[0] = 1;						dataNames[0] = "holdAGL";
+		dataOut[1] = desiredAlt;			dataNames[1] = "desired AGL";
+		dataOut[2] = agl;					dataNames[2] = "current AGL";
+		dataOut[3] = aglPID.error;			dataNames[3] = "AGL error";
+		dataOut[4] = aglPID.errorRate;		dataNames[4] = "AGL rate of error";
+		dataOut[5] = aglPID.accumulator;	dataNames[5] = "accumulation of error";
+	}
+}
+
+float getSignedThrottle(float deadZone = 0, float power = 1)
+{
+	float data[1]{};
+	XPLMGetDatavf(joystickThrottleAxis, data, 28, 1);
+	float throttle = 1 - 2 * data[0];
+
+	if (throttle > deadZone) throttle = (throttle - deadZone) / (1 - deadZone);
+	else if (throttle < -deadZone) throttle = (throttle + deadZone) / (1 - deadZone);
+	else throttle = 0;
+
+	bool negative = throttle < 0;
+	if (negative) throttle *= -1;
+	throttle = pow(throttle, power);
+	if (negative) throttle *= -1;
+
+	return throttle;
+}
+
+float getUnsignedThrottle(bool flip = false, float power = 1)
+{
+	float data[1]{};
+	XPLMGetDatavf(joystickThrottleAxis, data, 28, 1);
+	data[0] = flip ? data[0] : 1 - data[0];
+	return pow(data[0], power);
+}
+
+void autoHover(float* dataOut = nullptr, std::string* dataNames = nullptr)
+{
+	const float maxAltHoldAGL = 5;
+	const float aglHoldHysteresis = 1;
+	static bool hysteresis = false;
+	static bool vviProtection = false;
+	
+	float data[10]{}; std::string names[10];
+	float threshholdAlt = maxAltHoldAGL + (hysteresis ? 0 : aglHoldHysteresis);
+	holdVVI(getSignedThrottle(0.05, 3), false, data, names);
+	for (int i = 0; i < 10; i++) { dataOut[i] = data[i]; dataNames[i] = names[i]; }
+	/*
+	if (XPLMGetDataf(alt_agl_handle) > threshholdAlt || vviProtection)
+	{
+		vviProtection = holdVVI(getSignedThrottle(0.05, 2), !hysteresis, data, names);
+		for (int i = 0; i < 10; i++) { dataOut[i] = data[i]; dataNames[i] = names[i]; }
+		hysteresis = true;
+	}
+	else
+	{
+		holdAGL(getSignedThrottle(0.05, 2), hysteresis, data, names); // reset desired alt if first time i.e. hysteresis value is true
+		for (int i = 0; i < 10; i++) { dataOut[i] = data[i]; dataNames[i] = names[i]; }
+		hysteresis = false;
+	}
+	*/
+}
+void autoThruster()
+{
+	float data[2]={0,0};
+	float speed = XPLMGetDataf(ground_speed);
+	if (25 < speed && speed < 52)
+	{
+		data[0] = -XPLMGetDataf(yoke[0]);
+		if (data[0] < 0) data[0] = 0;
+	}
+	else if (speed > 52)
+	{
+		data[0] = getUnsignedThrottle();
+	}
+
+	data[1] = data[0];
+	XPLMSetDatavf(throttle_ratio, data, 0, 2);
+}
+
+void	draw_hello_world(XPLMWindowID in_window_id, void* in_refcon)
+{
+	// Mandatory: We *must* set the OpenGL state before drawing
+	// (we can't make any assumptions about it)
+	XPLMSetGraphicsState(
+		0 /* no fog */,
+		0 /* 0 texture units */,
+		0 /* no lighting */,
+		0 /* no alpha testing */,
+		1 /* do alpha blend */,
+		1 /* do depth testing */,
+		0 /* no depth writing */
+	);
+
+	int l, t, r, b;
+	XPLMGetWindowGeometry(in_window_id, &l, &t, &r, &b);
+	
+	///// Control Stuff /////
+
+	// int test = shutDownHoverWhenHidden(XPLMGetDataf(joystickThrottleAxis));
+	// XPLMDrawNumber(font_color, l + 100, t - 60, XPLMGetDataf(thrust_vctr), 3, 2, 1, xplmFont_Proportional);
+	// XPLMDrawNumber(font_color, l + 100, t - 80, test, 3, 2, 1, xplmFont_Proportional);
+	
+	/*
+	int keys[6];
+	XPLMGetDatavi(ignition_key, keys, 0, 6);
+	for (int i = 0; i < 6; i++) {
+		XPLMDrawNumber(font_color, l + 30*(i+1), t - 100, keys[i], 3, 2, 1, xplmFont_Proportional);
+	}
+	*/
+
+	//XPLMDrawNumber(font_color, l + 30, t - 120, sideCantProps(2, 30), 3, 2, 1, xplmFont_Proportional);
+	//XPLMDrawNumber(font_color, l + 30, t - 120, sideCantProps(3, 30), 3, 2, 1, xplmFont_Proportional);
+	
+
+	float hoverData[10];
+	std::string dataNames[10];
+
+	autoHover(hoverData, dataNames);
+	autoThruster();
+	
+	for (int i = 2; i < 4; i++)
+	{
+		sideCantProps(i, 30);
+		vertCantProps(i, 30);
+	}
+	//holdHoverThrust(getUnsignedThrottle(), hoverData, dataNames);
+	
+	if (XPLMGetDataf(ground_speed) > 52)
+		stowProps(true);
+	else
+		stowProps(false);
+	
+
+	char dataNamesChar[255];
+	hoverData[8] = getWeight();
+	hoverData[9] = XPLMGetDataf(pitch);
+
+	for (int i = 0; i < 10; i++) {
+		XPLMDrawNumber(font_color, l + 10, t - 20 * (i + 1), hoverData[i], 3, 2, 1, xplmFont_Proportional);
+		std::strcpy(dataNamesChar, dataNames[i].c_str());
+		XPLMDrawString(font_color, l + 50, t - 20 * (i + 1), dataNamesChar, NULL, xplmFont_Proportional);
+	}
+
+	//XPLMDrawNumber(font_color, l + 30, t - 30 * (4), XPLMGetDataf(joystick_yaw_deadzone), 3, 2, 1, xplmFont_Proportional);
+
+	/*
+	float col_white[] = { 1.0, 1.0, 1.0 }; // red, green, blue
+
+	float agl = XPLMGetDataf(alt_agl_handle);
+	float ground_spd = XPLMGetDataf(ground_speed);
+
+	float rate;
+	float desired_rate;
+	float errors[3];
+
+	//float lever_pos = get_lever_pos(28);
+	//float hover_throttle = calc_hover_throttle(lever_pos, ground_spd, rate, desired_rate, errors);
+	//float fwd_throttle = calc_fwd_throttle(lever_pos, ground_spd);
+
+	//throttle_handler(hover_throttle, fwd_throttle);
+
+	float gear_forces = XPLMGetDataf(gear_nml_forces);
+
+	float t_vel, n_vel;
+	//local_vels(t_vel, n_vel);
+
+	XPLMDrawString(font_color, l + 10, t - 20, "Change Test: 24", NULL, xplmFont_Proportional);
+	XPLMDrawNumber(col_white, l + 100, t - 60, 0.0, 3, 2, 1, xplmFont_Proportional);
+	XPLMDrawNumber(col_white, l + 100, t - 80, t_vel, 3, 8, 1, xplmFont_Proportional);
+	XPLMDrawNumber(col_white, l + 100, t - 100, n_vel, 3, 8, 1, xplmFont_Proportional);
+
+	float errors_pitch[3];
+	float errors_roll[3];
+
+	//yoke_handler(errors_pitch, errors_roll);
+	//draw_PID(l, t, r, b, PID[0], 20);
+	//draw_PID(l, t, r, b, errors, 50);
+
+
+
+	XPLMDrawNumber(col_white, l + 10, t - 120, rate, 2, 2, 1, xplmFont_Proportional);
+	XPLMDrawNumber(col_white, l + 10, t - 140, desired_rate, 2, 2, 1, xplmFont_Proportional);
+	XPLMDrawNumber(col_white, l + 10, t - 40, bias, 2, 4, 1, xplmFont_Proportional);
+	*/
+}
