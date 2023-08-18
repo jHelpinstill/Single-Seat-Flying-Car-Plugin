@@ -23,6 +23,7 @@
 #include "Aircraft.h"
 #include "PluginSetup.h"
 
+
 ///// THIS SHOULD ONLY APPEAR IN THE "PID OVERHAUL" BRANCH ON GITHUB /////
 
 
@@ -54,7 +55,7 @@ void doHover()
 	{
 		
 		Vec3 world_accel = (GlobalVars::vehicle_roll_pitch * GlobalVars::vehicle_accel);
-		Vec3 air_vel = GlobalVars::vehicle_roll_pitch.inverse() * -GlobalVars::airflow_rel;
+		Vec3 air_vel = GlobalVars::vehicle_roll_pitch.inverse() * -GlobalVars::airflow_rel; 
 		Vec3 temp = air_vel; temp.z = 0;
 		float air_speed_horiz = temp.mag();
 		const float min_airspeed_for_high_speed_input = 10;
@@ -178,6 +179,8 @@ void doForward()
 		GlobalVars::debug.println("Target MSL: ", target_alt);
 		GlobalVars::debug.println("Target Heading: ", headingCorrection(target_heading));
 		GlobalVars::debug.println("Heading: ", headingCorrection(heading));
+		GlobalVars::debug.println("Target Heading RAW: ", target_heading);
+		GlobalVars::debug.println("Heading RAW: ", heading);
 		GlobalVars::debug.println("psi: ", XPLMGetDataf(GlobalVars::psi));
 		GlobalVars::debug.println();
 		
