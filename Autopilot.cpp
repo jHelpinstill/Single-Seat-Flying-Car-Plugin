@@ -5,8 +5,11 @@ float holdHeading(float target_heading, float max_bank_angle, float max_roll_rat
 	//const float max_bank_angle = 30;
 	static PID heading_hold(5, 0.0, 0.0);
 	float heading = GlobalVars::vehicle_rot.eulerAngles().z;
+	target_heading -= heading;
+	if (target_heading < -180) target_heading += 360;
+	else if (target_heading > 180) target_heading -= 360;
 	//float heading = XPLMGetDataf(GlobalVars::psi);
-	float target_bank_angle = -rBound(heading_hold.update(target_heading, heading, GlobalVars::dt), -max_bank_angle, max_bank_angle);
+	float target_bank_angle = -rBound(heading_hold.update(target_heading, 0, GlobalVars::dt), -max_bank_angle, max_bank_angle);
 
 	//GlobalVars::debug.println("HH PID INFO: ", heading_hold.error);
 	//GlobalVars::debug.println("target: ", target_heading);
