@@ -126,7 +126,7 @@ PLUGIN_API int XPluginStart(
 
 void pluginSetup()
 {
-	Vec3 nose_fan_pos(-1.8, 0, 0.05), left_fan_pos(-11, 10, 0.57), right_fan_pos(-11, -10, 0.57), CoM_pos(-10, 0, 0.5);
+	Vec3 nose_fan_pos(-1.8, 0, 0.05), left_fan_pos(-11, 8.5, 0.57), right_fan_pos(-11, -8.5, 0.57), CoM_pos(-10, 0, 0.5);
 
 	nose_fan_pos *= 0.3048;
 	left_fan_pos *= 0.3048;
