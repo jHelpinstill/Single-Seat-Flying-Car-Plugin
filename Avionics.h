@@ -11,7 +11,6 @@ void findVehicleRotInfo();
 void findRelativeAirflow();
 void findVehicleAccel();
 void findGroundState();
-Vec3 rotRateHoldHover(Vec3 target_rates);
 Vec3 rotRateHoldHover(float target_rate, int axis);
 float rotHoldHoverRate(float target_angle, int axis);
 Vec3 rotHoldHover(float target_angle, int axis);

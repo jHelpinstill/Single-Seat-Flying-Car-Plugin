@@ -90,10 +90,6 @@ Vec3 torqueForRateHold(
 	float i,
 	float dt)
 {
-	//const float p = 0.1;
-	//const float d = 0.002;
-	//const float i = 0.01;
-
 	Vec3 error = target_rate - GlobalVars::vehicle_rot_rate;
 	Vec3 error_rate = (error - prev_error) / dt;
 	prev_error = error;
@@ -106,15 +102,6 @@ Vec3 torqueForRateHold(
 	return GlobalVars::inertia_tensor * correction;
 }
 
-Vec3 rotRateHoldHover(Vec3 target_rates)	// returns torque require to hold input rotation rates
-{
-	Vec3 torque;
-	for (int i = 0; i < 3; i++)
-	{
-		torque += rotRateHoldHover(target_rates.n[i], i);
-	}
-	return torque;
-}
 Vec3 rotRateHoldHover(float target_rate, int axis)	// returns torque require to hold input rotation rate
 {
 	static PID rotPIDs[3] =
