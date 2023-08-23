@@ -42,5 +42,5 @@ namespace GlobalVars
 	extern bool on_ground_flag;
 
 	extern float dt;
-	extern Button joy_3, joy_4, joy_5, joy_6, joy_trigger, joy_up, joy_down, joy_left, joy_right, joy_thumb;
+	extern Button joy_3, joy_4, joy_5, joy_6, joy_7, joy_8, joy_9, joy_10, joy_11, joy_12, joy_trigger, joy_up, joy_down, joy_left, joy_right, joy_thumb;
 }
