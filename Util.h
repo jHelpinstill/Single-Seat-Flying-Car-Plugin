@@ -5,6 +5,7 @@
 #include "Quat.h"
 #include <vector>
 #include "GlobalVars.h"
+#include "PID.h"
 
 float rBound(float num, float lower, float upper);
 void bound(float& num, float lower, float upper);
@@ -19,18 +20,4 @@ inline T lerp(T a, T b, float t, bool bound_t)
 float applyDeadzone(float data, float dead_zone, float power = 1, float data_max = 1);
 float mag(float a);
 float headingCorrection(float heading);
-
-class RollingAvg
-{
-private:
-	std::vector<float> prev_values;
-	int num_values = 2;
-	int values_index = 0;
-	float accumulator = 0;
-
-public:
-	RollingAvg() {}
-	RollingAvg(int num_values_);
-
-	void apply(float& input);
-};
+void adjustPID(PID* pid);
