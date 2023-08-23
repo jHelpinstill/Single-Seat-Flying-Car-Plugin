@@ -42,6 +42,12 @@ void buttonSetup()
 	GlobalVars::joy_4.id = 163; buttons.push_back(&GlobalVars::joy_4);
 	GlobalVars::joy_5.id = 164; buttons.push_back(&GlobalVars::joy_5);
 	GlobalVars::joy_6.id = 165; buttons.push_back(&GlobalVars::joy_6);
+	GlobalVars::joy_7.id = 166; buttons.push_back(&GlobalVars::joy_7);
+	GlobalVars::joy_8.id = 167; buttons.push_back(&GlobalVars::joy_8);
+	GlobalVars::joy_9.id = 168; buttons.push_back(&GlobalVars::joy_9);
+	GlobalVars::joy_10.id = 169; buttons.push_back(&GlobalVars::joy_10);
+	GlobalVars::joy_11.id = 170; buttons.push_back(&GlobalVars::joy_11);
+	GlobalVars::joy_12.id = 171; buttons.push_back(&GlobalVars::joy_12);
 
 	GlobalVars::joy_up.id = 172; buttons.push_back(&GlobalVars::joy_up);
 	GlobalVars::joy_down.id = 176; buttons.push_back(&GlobalVars::joy_down);
@@ -153,56 +159,4 @@ float getUnsignedJoystickThrottle(bool flip, float power)
 	XPLMGetDatavf(GlobalVars::joystickThrottleAxis, data, 28, 1);
 	data[0] = flip ? *data : 1 - *data;
 	return applyDeadzone(*data, 0, power);
-}
-
-
-BinaryScroller::BinaryScroller(Button* up, Button* down, float repeat_delay_, float scroll_spd_, float smooth_output_)
-{
-	up_but = up;
-	down_but = down;
-	repeat_delay = repeat_delay_;
-	scroll_spd = scroll_spd_;
-	smooth_output = smooth_output_;
-}
-
-void BinaryScroller::smooth(float& input)
-{
-	static float prev_input = 0;
-	if (input != prev_input)
-	{
-		float rate = (input - prev_input) / GlobalVars::dt;
-		if (rate > scroll_spd)
-			input = prev_input + scroll_spd * GlobalVars::dt;
-		else if (rate < -scroll_spd)
-			input = prev_input - scroll_spd * GlobalVars::dt;
-	}
-}
-
-void BinaryScroller::apply(float& input, float step)
-{
-	if (up_but->pressed)
-		input += step;
-	else if (down_but->pressed)
-		input -= step;
-
-	if (up_but->held || down_but->held)
-	{
-		if (repeat_timer < repeat_delay)
-			repeat_timer += GlobalVars::dt;
-		else
-			held_charge += scroll_spd * GlobalVars::dt;
-		if (held_charge >= 1)
-		{
-			if (up_but->held)
-				input += step;
-			else
-				input -= step;
-			held_charge -= 1;
-		}
-	}
-	else
-	{
-		repeat_timer = 0;
-		held_charge = 0;
-	}
 }
