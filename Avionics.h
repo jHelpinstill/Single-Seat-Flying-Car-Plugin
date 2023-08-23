@@ -18,7 +18,7 @@ Vec3 rotHoldHover(float target_angle, int axis);
 float sideSlipHoldHover(float target_slip_angle);
 void holdAoA(float angle);
 float holdNormalGs(float Gs);
-void holdSideSlip(float angle);
+PID* holdSideSlip(float angle, bool return_PID_ptr = false);
 
 Vec3 torqueForRotVelHold(
 	Vec3 target_rate,

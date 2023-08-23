@@ -211,21 +211,36 @@ void holdAoA(float angle)
 	//GlobalVars::debug.println("actual AoA: ", AoA);
 }
 
-void holdSideSlip(float angle)
+PID* holdSideSlip(float angle, bool return_PID_ptr)
 {
-	static PID slip_PID(0.2, 0.01, 0.1, 10);
+	const float default_p = 0.8;
+	static PID slip_PID(default_p, 0.15, 0.15, 10);
 
-	float target_gs = 0.22 * angle;
+	if (return_PID_ptr) return &slip_PID;
 
-	//float yaw_ratio = slip_PID.update(angle, asin(GlobalVars::airflow_rel.unit().y) / GlobalVars::deg2rad, GlobalVars::dt);
-	float yaw_ratio = slip_PID.update(target_gs * GlobalVars::g0, GlobalVars::vehicle_accel.y, GlobalVars::dt);
+	//float target_gs = 0.22 * angle;
+
+	float current_angle = asin(GlobalVars::airflow_rel.unit().y) / GlobalVars::deg2rad;
+	if (abs(current_angle) < 1)
+	{
+		// reduce proportional component of PID as it closes in on zero degrees, prevents jittering when vehicle is very close to prograde
+		slip_PID.P = 0.1 + (default_p - 0.1) * abs(current_angle);
+
+	}
+	else
+		slip_PID.P = default_p;
+	float yaw_ratio = slip_PID.update(angle, current_angle, GlobalVars::dt);
+
+	//float yaw_ratio = slip_PID.update(target_gs * GlobalVars::g0, GlobalVars::vehicle_accel.y, GlobalVars::dt);
 	float air_spd = GlobalVars::airflow_rel.mag();
-	if (air_spd == 0) return;
+	if (air_spd == 0) return nullptr;
 	yaw_ratio *= (75 / air_spd) * (75 / air_spd);
 
 	setControlSurface(yaw_ratio, 2);
-	GlobalVars::debug.println("target SIDE GS: ", target_gs);
-	GlobalVars::debug.println("actual SIDE GS: ", GlobalVars::vehicle_accel.y / GlobalVars::g0);
+	GlobalVars::debug.println("target slip angle: ", angle);
+	GlobalVars::debug.println("actual slip angle: ", current_angle);
+
+	return nullptr;
 }
 
 float holdNormalGs(float Gs)
