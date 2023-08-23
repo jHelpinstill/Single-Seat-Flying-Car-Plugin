@@ -1,4 +1,8 @@
 #include "Aircraft.h"
+#include "GlobalVars.h"
+#include "Util.h"
+
+
 
 void hideProps(float max_rpm)
 {

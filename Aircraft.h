@@ -1,10 +1,27 @@
 #pragma once
 
 #include "Vec3.h"
+#include "Matrix.h"
+#include "Quat.h"
 #include "XPLMDataAccess.h"
-#include "GlobalVars.h"
-#include "Util.h"
+#include "ControlMatrix.h"
 #include "PID.h"
+
+class Aircraft
+{
+public:
+	ControlMatrix lift_fan_matrix;
+	Matrix inertia_tensor;
+
+	Quat attitude, attitude_roll_pitch;
+	Vec3 rot_rate, rot_accel, airflow_rel, accel;
+	float mass;
+
+	bool on_ground = true;
+
+	Aircraft() {}
+
+};
 
 void hideProps(float max_rpm);
 void showProps();
