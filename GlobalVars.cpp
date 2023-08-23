@@ -10,17 +10,17 @@ namespace Global
 		engine_positions[3], moments[3], joy_buttons, incoming_air_flow[3], g_forces[3], control_surface_actuators[3],
 		joystick_axes, sim_paused, motor_power;
 
-	float font_color[3] = { 1.0, 1.0, 1.0 }; // red, green, blue
+	Aircraft vehicle;
 
 	const float deg2rad = 3.1415926535 / 180;
 	const float g0 = 9.80665;
 
-	ControlMatrix lift_fan_matrix;
-
-	Matrix inertia_tensor(3, 3);
-	Quat vehicle_attitude, vehicle_roll_pitch;
-	Vec3 vehicle_rot_rate, vehicle_rot_accel, airflow_rel, vehicle_accel;
-	float vehicle_mass;
+	//ControlMatrix lift_fan_matrix;
+	//
+	//Matrix inertia_tensor(3, 3);
+	//Quat vehicle_attitude, vehicle_roll_pitch;
+	//Vec3 vehicle_rot_rate, vehicle_rot_accel, airflow_rel, vehicle_accel;
+	//float vehicle_mass;
 
 	///// JOYSTICK BUTTONS /////
 	const int Global::trigger = 160;
@@ -29,8 +29,9 @@ namespace Global
 
 	TextBox debug;
 	int l, t, r, b;
+	float font_color[3] = { 1.0, 1.0, 1.0 }; // red, green, blue
 
-	bool on_ground_flag = true;
+	//bool on_ground_flag = true;
 
 	float dt;
 

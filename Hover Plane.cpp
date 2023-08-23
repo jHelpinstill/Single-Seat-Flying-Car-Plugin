@@ -45,7 +45,7 @@ void doHover()
 	if (getButton(Global::hover_mode2)) // rotate in place w/ no translate
 	{
 		force.z = VVIHold(throttle_position * 10);
-		force = Global::vehicle_roll_pitch.inverse() * force;
+		force = Global::vehicle.attitude_roll_pitch.inverse() * force;
 
 		Vec3 rotation = joystick_input;
 		rotation.x *= 30;
@@ -56,8 +56,8 @@ void doHover()
 	else // hover_mode1: joystick controls translation with rotation following acceleration at low speeds, and following prograde at high speeds
 	{
 		
-		Vec3 world_accel = (Global::vehicle_roll_pitch * Global::vehicle_accel);
-		Vec3 air_vel = Global::vehicle_roll_pitch.inverse() * -Global::airflow_rel; 
+		Vec3 world_accel = (Global::vehicle.attitude_roll_pitch * Global::vehicle.accel);
+		Vec3 air_vel = Global::vehicle.attitude_roll_pitch.inverse() * -Global::vehicle.airflow_rel; 
 		Vec3 temp = air_vel; temp.z = 0;
 		float air_speed_horiz = temp.mag();
 		const float min_airspeed_for_high_speed_input = 10;
@@ -67,9 +67,9 @@ void doHover()
 
 
 		/// FORCES ///
-		force.y = -joystick_input.x * Global::vehicle_mass * Global::g0;
+		force.y = -joystick_input.x * Global::vehicle.mass * Global::g0;
 		force.z = VVIHold(throttle_position * lerp(10.0, 20.0, t, 1));
-		force.x = joystick_input.y * Global::vehicle_mass * Global::g0;
+		force.x = joystick_input.y * Global::vehicle.mass * Global::g0;
 
 		const float pusher_ratio = 1.5;
 		float pusher_force = lerp(0.0f, force.x / pusher_ratio, t, 1);
@@ -94,11 +94,11 @@ void doHover()
 		const float roll_rate = 120;
 		const float max_roll = 45;
 		float high_speed_roll = joystick_input.x * roll_rate;
-		if (Global::vehicle_roll_pitch.eulerAngles().x > max_roll)
+		if (Global::vehicle.attitude_roll_pitch.eulerAngles().x > max_roll)
 			bound(high_speed_roll, -roll_rate, 0);
-		else if ((Global::vehicle_roll_pitch.eulerAngles().x < -max_roll))
+		else if ((Global::vehicle.attitude_roll_pitch.eulerAngles().x < -max_roll))
 			bound(high_speed_roll, 0, roll_rate);
-		Vec3 proj = (Global::airflow_rel).unit();
+		Vec3 proj = (Global::vehicle.airflow_rel).unit();
 		float high_speed_pitch = (asin(proj.z) / Global::deg2rad);// -lerp(0, 5, t, 1);
 		float side_slip = joystick_input.z * 10;
 
@@ -119,7 +119,7 @@ void doHover()
 
 	Vec3 target_fan_vectors[3];
 	///// Transform input forces and torques into left, right, and nose lift fan thrust vectors /////
-	Global::lift_fan_matrix.compute(force, torque, target_fan_vectors[0], target_fan_vectors[1], target_fan_vectors[2]);
+	Global::vehicle.lift_fan_matrix.compute(force, torque, target_fan_vectors[0], target_fan_vectors[1], target_fan_vectors[2]);
 	for (int i = 0; i < 3; i++)
 		setMotorThrustDirection(target_fan_vectors[i], i + 2);
 }
@@ -136,7 +136,7 @@ void doForward()
 
 	joy_throttle -= 0.1;
 	if (joy_throttle < 0) joy_throttle *= 5;
-	float thrust = joy_throttle * Global::vehicle_mass * Global::g0;
+	float thrust = joy_throttle * Global::vehicle.mass * Global::g0;
 	
 	Global::debug.println("thrust lbs per engine: ", (float)(thrust * 0.224809 / 2));
 
@@ -148,13 +148,13 @@ void doForward()
 	if (Global::joy_thumb.pressed)
 	{
 		auto_pilot = !auto_pilot;
-		target_vel = Global::airflow_rel.mag();
+		target_vel = Global::vehicle.airflow_rel.mag();
 		target_vel = floor(target_vel * 2.237) / 2.237;
 
 		target_alt = XPLMGetDataf(Global::MSL_elevation) * meters2feet;
 		target_alt = (int)target_alt - ((int)target_alt % 10);
 
-		target_heading = (int)Global::vehicle_attitude.eulerAngles().z;
+		target_heading = (int)Global::vehicle.attitude.eulerAngles().z;
 		//target_heading = (int)XPLMGetDataf(GlobalVars::psi);
 	}
 	if (joystick_input.mag() > 0.2)
@@ -174,7 +174,7 @@ void doForward()
 		if (target_heading > 180) target_heading -= 360;	// bound target heading to -180, 180
 		else if (target_heading < -180) target_heading += 360;
 
-		float heading = Global::vehicle_attitude.eulerAngles().z;
+		float heading = Global::vehicle.attitude.eulerAngles().z;
 		Global::debug.println("");
 		Global::debug.println("AUTO PILOT ON");
 		Global::debug.println("Target speed mph: ", (float)(target_vel * 2.237));
@@ -197,7 +197,7 @@ void doForward()
 	{
 		setFwdThrust(thrust);
 		fwdStabilityControl(joystick_input);
-		float t = (Global::airflow_rel.mag() - 45) / (55 - 45);	// 0 at 45, 1 at 55
+		float t = (Global::vehicle.airflow_rel.mag() - 45) / (55 - 45);	// 0 at 45, 1 at 55
 		mixControlSurfaces(joystick_input, lerp(0.8, 0.0, t, 1));
 
 		if (Global::joy_3.held)
@@ -233,7 +233,7 @@ void findFlightState(Flight_state &flight_state)
 {
 	//static int prev_trigger_state = false;
 
-	if (Global::on_ground_flag)
+	if (Global::vehicle.on_ground)
 		flight_state = Flight_state::on_ground;
 
 	else
@@ -256,7 +256,7 @@ void findFlightState(Flight_state &flight_state)
 		}//prev_trigger_state = trigger_state;
 	}
 
-	if (Global::airflow_rel.mag() > 100)
+	if (Global::vehicle.airflow_rel.mag() > 100)
 		flight_state = Flight_state::forward;
 }
 
@@ -276,7 +276,7 @@ float printPower()
 
 void printMPG(float power)
 {
-	Vec3 ground_speed = Global::vehicle_attitude * (Global::airflow_rel * (3600 / 1609.0));
+	Vec3 ground_speed = Global::vehicle.attitude * (Global::vehicle.airflow_rel * (3600 / 1609.0));
 	Global::debug.println(ground_speed);
 	ground_speed.z = 0;
 
@@ -301,9 +301,9 @@ void aircraftMAIN()
 	updateButtons();
 	updateVehicleInfo();
 	findFlightState(flight_state);
-	Global::debug.println("vehicle rotation - world	: ", Global::vehicle_attitude.eulerAngles());
-	Global::debug.println("vehicle rotation rate	: ", Global::vehicle_rot_rate);
-	Global::debug.println("vehicle rotation accel	: ", Global::vehicle_rot_accel);
+	Global::debug.println("vehicle rotation - world	: ", Global::vehicle.attitude.eulerAngles());
+	Global::debug.println("vehicle rotation rate	: ", Global::vehicle.rot_rate);
+	Global::debug.println("vehicle rotation accel	: ", Global::vehicle.rot_accel);
 
 
 

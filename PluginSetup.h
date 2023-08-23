@@ -80,10 +80,10 @@ PLUGIN_API int XPluginStart(
 	getDataRefs();
 
 
-	Global::vehicle_mass = XPLMGetDataf(Global::total_mass);
+	Global::vehicle.mass = XPLMGetDataf(Global::total_mass);
 	for (int i = 0; i < 3; i++)
 	{
-		Global::inertia_tensor.a[i][i] = Global::vehicle_mass * XPLMGetDataf(Global::moments[i]);
+		Global::vehicle.inertia_tensor.a[i][i] = Global::vehicle.mass * XPLMGetDataf(Global::moments[i]);
 	}
 
 
@@ -112,7 +112,7 @@ PLUGIN_API int XPluginStart(
 	//matrix.fillMatrix(fan_positions[2], fan_positions[0], fan_positions[1], CoM_pos);
 
 
-	Global::lift_fan_matrix.fillMatrix(nose_fan_pos, left_fan_pos, right_fan_pos, CoM_pos);
+	Global::vehicle.lift_fan_matrix.fillMatrix(nose_fan_pos, left_fan_pos, right_fan_pos, CoM_pos);
 
 
 	// Position the window as a "free" floating window, which the user can drag around
@@ -133,12 +133,12 @@ void pluginSetup()
 	right_fan_pos *= 0.3048;
 	CoM_pos *= 0.3048;
 
-	Global::lift_fan_matrix.fillMatrix(nose_fan_pos, left_fan_pos, right_fan_pos, CoM_pos);
+	Global::vehicle.lift_fan_matrix.fillMatrix(nose_fan_pos, left_fan_pos, right_fan_pos, CoM_pos);
 
-	Global::vehicle_mass = XPLMGetDataf(Global::total_mass);
+	Global::vehicle.mass = XPLMGetDataf(Global::total_mass);
 	for (int i = 0; i < 3; i++)
 	{
-		Global::inertia_tensor.a[i][i] = Global::vehicle_mass * XPLMGetDataf(Global::moments[i]);
+		Global::vehicle.inertia_tensor.a[i][i] = Global::vehicle.mass * XPLMGetDataf(Global::moments[i]);
 	}
 
 	XPLMSetDatai(Global::override_joystick, 1);
