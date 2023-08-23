@@ -19,8 +19,8 @@ void cutHoverThrottles()
 
 void setControlSurface(float input, int axis)
 {
-	bound(input, -1, 1);
 	if (axis == 1 || axis == 2) input = -input;
+	bound(input, -1, 1);
 	XPLMSetDataf(GlobalVars::control_surface_actuators[axis], input);
 }
 
@@ -51,9 +51,8 @@ void mixControlSurfaces(Vec3 input, float mix_ratio)
 void setControlSurfaces(Vec3 input)
 {
 	bound(input, -1, 1);
-	XPLMSetDataf(GlobalVars::control_surface_actuators[0], input.x);
-	XPLMSetDataf(GlobalVars::control_surface_actuators[1], -input.y);
-	XPLMSetDataf(GlobalVars::control_surface_actuators[2], -input.z);
+	for (int i = 0; i < 3; i++)
+		setControlSurface(input.n[i], i);
 }
 
 void setFwdThrust(float thrust)
