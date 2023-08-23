@@ -50,13 +50,13 @@ void findVehicleRotInfo()
 	float pitch_ = -XPLMGetDataf(GlobalVars::pitch);
 	float psi_ = 360 - XPLMGetDataf(GlobalVars::psi);
 	GlobalVars::debug.println("psi: ", psi_);
-	GlobalVars::vehicle_rot = Quat(Vec3(roll_, pitch_, psi_));
+	GlobalVars::vehicle_attitude = Quat(Vec3(roll_, pitch_, psi_));
 	GlobalVars::vehicle_roll_pitch = Quat(Vec3(roll_, pitch_, 0));
 
 	static Quat prev_rot;
-	GlobalVars::vehicle_rot_rate = (prev_rot.inverse() * GlobalVars::vehicle_rot).eulerAngles() / dt;
+	GlobalVars::vehicle_rot_rate = (prev_rot.inverse() * GlobalVars::vehicle_attitude).eulerAngles() / dt;
 
-	prev_rot = GlobalVars::vehicle_rot;
+	prev_rot = GlobalVars::vehicle_attitude;
 
 	static Vec3 prev_rate;
 	GlobalVars::vehicle_rot_accel = (GlobalVars::vehicle_rot_rate - prev_rate) / dt;
@@ -102,7 +102,7 @@ Vec3 torqueForRateHold(
 	return GlobalVars::inertia_tensor * correction;
 }
 
-Vec3 rotRateHoldHover(float target_rate, int axis)	// returns torque require to hold input rotation rate
+Vec3 rateHoldHover(float target_rate, int axis)	// returns torque require to hold input rotation rate
 {
 	static PID rotPIDs[3] =
 	{
@@ -124,14 +124,20 @@ float rotHoldHoverRate(float target_angle, int axis)
 		PID(4, 0.05, 0),
 		PID(4, 0.05, 0)
 	};
-	return rotPIDs[axis].update(target_angle, GlobalVars::vehicle_rot.eulerAngles().n[axis], GlobalVars::dt);
+	return rotPIDs[axis].update(target_angle, GlobalVars::vehicle_attitude.eulerAngles().n[axis], GlobalVars::dt);
 }
 
-Vec3 rotHoldHover(float target_angle, int axis)		// returns torque require to hold input rotation
+Vec3 attitudeHoldHover(float target_angle, int axis)// returns torque require to hold given angle about axis
 {
-	Vec3 angular_vel;
-	angular_vel.n[axis] = rotHoldHoverRate(target_angle, axis);
-	return rotRateHoldHover(angular_vel.n[axis], axis);
+	//Vec3 angular_vel;
+	//angular_vel.n[axis] = rotHoldHoverRate(target_angle, axis);
+	static PID rotPIDs[3] =
+	{
+		PID(4, 0.05, 0),
+		PID(4, 0.05, 0)
+	};
+	float rate = rotPIDs[axis].update(target_angle, GlobalVars::vehicle_attitude.eulerAngles().n[axis], GlobalVars::dt);
+	return rateHoldHover(rate, axis);
 }
 
 float sideSlipHoldHover(float target_slip_angle)
@@ -140,8 +146,6 @@ float sideSlipHoldHover(float target_slip_angle)
 
 	float slip_angle = rBound(asin(GlobalVars::airflow_rel.unit().y) / GlobalVars::deg2rad, -10, 10);
 	float yaw_rate = side_slip_PID.update(target_slip_angle, slip_angle, GlobalVars::dt);
-	//GlobalVars::debug.println("target_slip_angle: ", target_slip_angle);
-	//GlobalVars::debug.println("current slip angle: ", slip_angle);
 	return yaw_rate;
 }
 
@@ -149,9 +153,9 @@ Vec3 attitudeControlTorque(Vec3 control_in)
 {
 
 	Vec3 torque;
-	torque += rotHoldHover(control_in.x, 0);
-	torque += rotHoldHover(control_in.y, 1);
-	torque += rotRateHoldHover(control_in.z, 2);
+	torque += attitudeHoldHover(control_in.x, 0);
+	torque += attitudeHoldHover(control_in.y, 1);
+	torque += rateHoldHover(control_in.z, 2);
 
 	return torque;
 }

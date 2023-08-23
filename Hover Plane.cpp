@@ -105,9 +105,9 @@ void doHover()
 		float combined_roll_rate = lerp(rotHoldHoverRate(roll, 0), high_speed_roll, t, 1);
 		float combined_pitch = lerp(pitch, high_speed_pitch, t, 1);
 		float combined_yaw_rate = lerp(yaw_rate, sideSlipHoldHover(side_slip), t, 1);
-		torque =	rotRateHoldHover(combined_roll_rate, 0) +
-					rotHoldHover(combined_pitch, 1) +
-					rotRateHoldHover(combined_yaw_rate, 2);
+		torque =	rateHoldHover(combined_roll_rate, 0) +
+					attitudeHoldHover(combined_pitch, 1) +
+					rateHoldHover(combined_yaw_rate, 2);
 		holdSideSlip(side_slip);
 		holdAoA(-2);
 		GlobalVars::debug.println("high speed roll: ", high_speed_roll);
@@ -154,7 +154,7 @@ void doForward()
 		target_alt = XPLMGetDataf(GlobalVars::MSL_elevation) * meters2feet;
 		target_alt = (int)target_alt - ((int)target_alt % 10);
 
-		target_heading = (int)GlobalVars::vehicle_rot.eulerAngles().z;
+		target_heading = (int)GlobalVars::vehicle_attitude.eulerAngles().z;
 		//target_heading = (int)XPLMGetDataf(GlobalVars::psi);
 	}
 	if (joystick_input.mag() > 0.2)
@@ -174,7 +174,7 @@ void doForward()
 		if (target_heading > 180) target_heading -= 360;	// bound target heading to -180, 180
 		else if (target_heading < -180) target_heading += 360;
 
-		float heading = GlobalVars::vehicle_rot.eulerAngles().z;
+		float heading = GlobalVars::vehicle_attitude.eulerAngles().z;
 		GlobalVars::debug.println("");
 		GlobalVars::debug.println("AUTO PILOT ON");
 		GlobalVars::debug.println("Target speed mph: ", (float)(target_vel * 2.237));
@@ -276,7 +276,7 @@ float printPower()
 
 void printMPG(float power)
 {
-	Vec3 ground_speed = GlobalVars::vehicle_rot * (GlobalVars::airflow_rel * (3600 / 1609.0));
+	Vec3 ground_speed = GlobalVars::vehicle_attitude * (GlobalVars::airflow_rel * (3600 / 1609.0));
 	GlobalVars::debug.println(ground_speed);
 	ground_speed.z = 0;
 
@@ -301,7 +301,7 @@ void aircraftMAIN()
 	updateButtons();
 	updateVehicleInfo();
 	findFlightState(flight_state);
-	GlobalVars::debug.println("vehicle rotation - world	: ", GlobalVars::vehicle_rot.eulerAngles());
+	GlobalVars::debug.println("vehicle rotation - world	: ", GlobalVars::vehicle_attitude.eulerAngles());
 	GlobalVars::debug.println("vehicle rotation rate	: ", GlobalVars::vehicle_rot_rate);
 	GlobalVars::debug.println("vehicle rotation accel	: ", GlobalVars::vehicle_rot_accel);
 

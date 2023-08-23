@@ -27,7 +27,7 @@ namespace GlobalVars
 	extern ControlMatrix matrix;
 
 	extern Matrix inertia_tensor;// (3, 3);
-	extern Quat vehicle_rot, vehicle_roll_pitch;
+	extern Quat vehicle_attitude, vehicle_roll_pitch;
 	extern Vec3 vehicle_rot_rate, vehicle_rot_accel, airflow_rel, vehicle_accel;
 	extern float vehicle_mass;
 
