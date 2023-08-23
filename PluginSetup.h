@@ -80,17 +80,17 @@ PLUGIN_API int XPluginStart(
 	getDataRefs();
 
 
-	GlobalVars::vehicle_mass = XPLMGetDataf(GlobalVars::total_mass);
+	Global::vehicle_mass = XPLMGetDataf(Global::total_mass);
 	for (int i = 0; i < 3; i++)
 	{
-		GlobalVars::inertia_tensor.a[i][i] = GlobalVars::vehicle_mass * XPLMGetDataf(GlobalVars::moments[i]);
+		Global::inertia_tensor.a[i][i] = Global::vehicle_mass * XPLMGetDataf(Global::moments[i]);
 	}
 
 
 	//XPLMSetDatai(override_pitch, 1);
 	//XPLMSetDatai(override_roll, 1);
 
-	XPLMSetDataf(GlobalVars::joystick_yaw_deadzone, 0.2);
+	XPLMSetDataf(Global::joystick_yaw_deadzone, 0.2);
 	Vec3 nose_fan_pos(-1.8, 0, 0.05), left_fan_pos(-11, 10, 0.57), right_fan_pos(-11, -10, 0.57), CoM_pos(-10, 0, 0.5);
 
 	nose_fan_pos *= 0.3048;
@@ -104,7 +104,7 @@ PLUGIN_API int XPluginStart(
 		for (int dir = 0; dir < 3; dir++)
 		{
 			float temp;
-			XPLMGetDatavf(GlobalVars::engine_positions[dir], &temp, 2 + fan, 1);
+			XPLMGetDatavf(Global::engine_positions[dir], &temp, 2 + fan, 1);
 			fan_positions[fan].n[dir] = temp;
 		}
 	}
@@ -112,7 +112,7 @@ PLUGIN_API int XPluginStart(
 	//matrix.fillMatrix(fan_positions[2], fan_positions[0], fan_positions[1], CoM_pos);
 
 
-	GlobalVars::matrix.fillMatrix(nose_fan_pos, left_fan_pos, right_fan_pos, CoM_pos);
+	Global::lift_fan_matrix.fillMatrix(nose_fan_pos, left_fan_pos, right_fan_pos, CoM_pos);
 
 
 	// Position the window as a "free" floating window, which the user can drag around
@@ -133,15 +133,15 @@ void pluginSetup()
 	right_fan_pos *= 0.3048;
 	CoM_pos *= 0.3048;
 
-	GlobalVars::matrix.fillMatrix(nose_fan_pos, left_fan_pos, right_fan_pos, CoM_pos);
+	Global::lift_fan_matrix.fillMatrix(nose_fan_pos, left_fan_pos, right_fan_pos, CoM_pos);
 
-	GlobalVars::vehicle_mass = XPLMGetDataf(GlobalVars::total_mass);
+	Global::vehicle_mass = XPLMGetDataf(Global::total_mass);
 	for (int i = 0; i < 3; i++)
 	{
-		GlobalVars::inertia_tensor.a[i][i] = GlobalVars::vehicle_mass * XPLMGetDataf(GlobalVars::moments[i]);
+		Global::inertia_tensor.a[i][i] = Global::vehicle_mass * XPLMGetDataf(Global::moments[i]);
 	}
 
-	XPLMSetDatai(GlobalVars::override_joystick, 1);
+	XPLMSetDatai(Global::override_joystick, 1);
 
 	XPLMDebugString("SETUP COMPLETE\n");
 
@@ -153,8 +153,8 @@ PLUGIN_API void	XPluginStop(void)
 	// Since we created the window, we'll be good citizens and clean it up
 	XPLMDestroyWindow(g_window);
 	g_window = NULL;
-	XPLMSetDatai(GlobalVars::override_pitch, 0);
-	XPLMSetDatai(GlobalVars::override_roll, 0);
+	XPLMSetDatai(Global::override_pitch, 0);
+	XPLMSetDatai(Global::override_roll, 0);
 }
 
 PLUGIN_API void XPluginDisable(void) { }

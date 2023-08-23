@@ -5,9 +5,9 @@
 
 void showButtonNumbers()
 {
-	TextBox button_search(GlobalVars::l + 450, GlobalVars::t);
+	TextBox button_search(Global::l + 450, Global::t);
 	int buttons[3200];
-	XPLMGetDatavi(GlobalVars::joy_buttons, buttons, 0, 3200);
+	XPLMGetDatavi(Global::joy_buttons, buttons, 0, 3200);
 	for (int i = 0; i < 3200; i++)
 	{
 		if (buttons[i])
@@ -16,9 +16,9 @@ void showButtonNumbers()
 }
 void showJoystickAxes(float dead_zone)
 {
-	TextBox axes_search(GlobalVars::l + 450, GlobalVars::t - 50);
+	TextBox axes_search(Global::l + 450, Global::t - 50);
 	float axes[500];
-	XPLMGetDatavf(GlobalVars::joystick_axes, axes, 0, 500);
+	XPLMGetDatavf(Global::joystick_axes, axes, 0, 500);
 	int button_counter = 0;
 	for (int i = 0; i < 500; i++)
 	{
@@ -36,24 +36,24 @@ void showJoystickAxes(float dead_zone)
 std::vector<Button*> buttons;
 void buttonSetup()
 {
-	GlobalVars::joy_trigger.id = 160; buttons.push_back(&GlobalVars::joy_trigger);
+	Global::joy_trigger.id = 160; buttons.push_back(&Global::joy_trigger);
 
-	GlobalVars::joy_3.id = 162; buttons.push_back(&GlobalVars::joy_3);
-	GlobalVars::joy_4.id = 163; buttons.push_back(&GlobalVars::joy_4);
-	GlobalVars::joy_5.id = 164; buttons.push_back(&GlobalVars::joy_5);
-	GlobalVars::joy_6.id = 165; buttons.push_back(&GlobalVars::joy_6);
-	GlobalVars::joy_7.id = 166; buttons.push_back(&GlobalVars::joy_7);
-	GlobalVars::joy_8.id = 167; buttons.push_back(&GlobalVars::joy_8);
-	GlobalVars::joy_9.id = 168; buttons.push_back(&GlobalVars::joy_9);
-	GlobalVars::joy_10.id = 169; buttons.push_back(&GlobalVars::joy_10);
-	GlobalVars::joy_11.id = 170; buttons.push_back(&GlobalVars::joy_11);
-	GlobalVars::joy_12.id = 171; buttons.push_back(&GlobalVars::joy_12);
+	Global::joy_3.id = 162; buttons.push_back(&Global::joy_3);
+	Global::joy_4.id = 163; buttons.push_back(&Global::joy_4);
+	Global::joy_5.id = 164; buttons.push_back(&Global::joy_5);
+	Global::joy_6.id = 165; buttons.push_back(&Global::joy_6);
+	Global::joy_7.id = 166; buttons.push_back(&Global::joy_7);
+	Global::joy_8.id = 167; buttons.push_back(&Global::joy_8);
+	Global::joy_9.id = 168; buttons.push_back(&Global::joy_9);
+	Global::joy_10.id = 169; buttons.push_back(&Global::joy_10);
+	Global::joy_11.id = 170; buttons.push_back(&Global::joy_11);
+	Global::joy_12.id = 171; buttons.push_back(&Global::joy_12);
 
-	GlobalVars::joy_up.id = 172; buttons.push_back(&GlobalVars::joy_up);
-	GlobalVars::joy_down.id = 176; buttons.push_back(&GlobalVars::joy_down);
-	GlobalVars::joy_left.id = 178; buttons.push_back(&GlobalVars::joy_left);
-	GlobalVars::joy_right.id = 174; buttons.push_back(&GlobalVars::joy_right);
-	GlobalVars::joy_thumb.id = 161; buttons.push_back(&GlobalVars::joy_thumb);
+	Global::joy_up.id = 172; buttons.push_back(&Global::joy_up);
+	Global::joy_down.id = 176; buttons.push_back(&Global::joy_down);
+	Global::joy_left.id = 178; buttons.push_back(&Global::joy_left);
+	Global::joy_right.id = 174; buttons.push_back(&Global::joy_right);
+	Global::joy_thumb.id = 161; buttons.push_back(&Global::joy_thumb);
 
 
 	for (int i = 0; i < buttons.size(); i++)
@@ -90,9 +90,9 @@ void adjustWithButtonf(float& input, float step, Button& button_up, Button& butt
 	if (button_up.held || button_down.held)
 	{
 		if (repeat_timer < repeat_delay)
-			repeat_timer += GlobalVars::dt;
+			repeat_timer += Global::dt;
 		else
-			held_charge += held_rate * GlobalVars::dt;
+			held_charge += held_rate * Global::dt;
 		if (held_charge >= 1)
 		{
 			if (button_up.held)
@@ -113,14 +113,14 @@ void adjustWithButtonf(float& input, float step, Button& button_up, Button& butt
 bool getButton(int button)
 {
 	int value;
-	XPLMGetDatavi(GlobalVars::joy_buttons, &value, button, 1);
+	XPLMGetDatavi(Global::joy_buttons, &value, button, 1);
 	return (value == true);
 }
 
 float getJoystickAxis(int axis)
 {
 	float* value = new float;
-	XPLMGetDatavf(GlobalVars::joystick_axes, value, axis, 1);
+	XPLMGetDatavf(Global::joystick_axes, value, axis, 1);
 	return *value;
 }
 
@@ -147,7 +147,7 @@ Vec3 getJoystickRotValues(float power)
 float getSignedJoystickThrottle(float power)
 {
 	float* data = new float;
-	XPLMGetDatavf(GlobalVars::joystickThrottleAxis, data, 28, 1);
+	XPLMGetDatavf(Global::joystickThrottleAxis, data, 28, 1);
 	float throttle = 1 - (*data * 2);
 
 	return applyDeadzone(throttle, 0, power);
@@ -156,7 +156,7 @@ float getSignedJoystickThrottle(float power)
 float getUnsignedJoystickThrottle(bool flip, float power)
 {
 	float* data = new float;
-	XPLMGetDatavf(GlobalVars::joystickThrottleAxis, data, 28, 1);
+	XPLMGetDatavf(Global::joystickThrottleAxis, data, 28, 1);
 	data[0] = flip ? *data : 1 - *data;
 	return applyDeadzone(*data, 0, power);
 }

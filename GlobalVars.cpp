@@ -1,6 +1,6 @@
 #include "GlobalVars.h"
 
-namespace GlobalVars
+namespace Global
 {
 	XPLMDataRef throttle_ratio, joystickThrottleAxis, alt_agl_handle, ground_speed,
 		frame_time, pitch, roll, psi, gear_nml_forces, thrust_vctr, spd_brk,
@@ -15,7 +15,7 @@ namespace GlobalVars
 	const float deg2rad = 3.1415926535 / 180;
 	const float g0 = 9.80665;
 
-	ControlMatrix matrix;
+	ControlMatrix lift_fan_matrix;
 
 	Matrix inertia_tensor(3, 3);
 	Quat vehicle_attitude, vehicle_roll_pitch;
@@ -23,7 +23,7 @@ namespace GlobalVars
 	float vehicle_mass;
 
 	///// JOYSTICK BUTTONS /////
-	const int GlobalVars::trigger = 160;
+	const int Global::trigger = 160;
 	const int hover_mode1 = 164;
 	const int hover_mode2 = 162;
 

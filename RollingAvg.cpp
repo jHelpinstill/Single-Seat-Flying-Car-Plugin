@@ -15,5 +15,5 @@ void RollingAvg::apply(float& input)
 	prev_values[values_index] = input;
 	values_index = (values_index + 1) % num_values;
 	input = accumulator / (float)num_values;
-	GlobalVars::debug.println("rolling avg accumulator: ", accumulator);
+	Global::debug.println("rolling avg accumulator: ", accumulator);
 }

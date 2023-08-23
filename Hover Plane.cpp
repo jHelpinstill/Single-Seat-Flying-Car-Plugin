@@ -31,10 +31,10 @@
 
 void doHover()
 {
-	float dt = GlobalVars::dt;
+	float dt = Global::dt;
 	showProps();
 	float fwd_throttle[2] = { 0, 0 };
-	XPLMSetDatavf(GlobalVars::throttle_ratio, fwd_throttle, 0, 2);
+	XPLMSetDatavf(Global::throttle_ratio, fwd_throttle, 0, 2);
 	setControlSurfaces(Vec3::zero);
 
 	Vec3 joystick_input = getJoystickRotValues(1.5);
@@ -42,10 +42,10 @@ void doHover()
 
 	float throttle_position = applyDeadzone(getSignedJoystickThrottle(3), 0.005);
 
-	if (getButton(GlobalVars::hover_mode2)) // rotate in place w/ no translate
+	if (getButton(Global::hover_mode2)) // rotate in place w/ no translate
 	{
 		force.z = VVIHold(throttle_position * 10);
-		force = GlobalVars::vehicle_roll_pitch.inverse() * force;
+		force = Global::vehicle_roll_pitch.inverse() * force;
 
 		Vec3 rotation = joystick_input;
 		rotation.x *= 30;
@@ -56,8 +56,8 @@ void doHover()
 	else // hover_mode1: joystick controls translation with rotation following acceleration at low speeds, and following prograde at high speeds
 	{
 		
-		Vec3 world_accel = (GlobalVars::vehicle_roll_pitch * GlobalVars::vehicle_accel);
-		Vec3 air_vel = GlobalVars::vehicle_roll_pitch.inverse() * -GlobalVars::airflow_rel; 
+		Vec3 world_accel = (Global::vehicle_roll_pitch * Global::vehicle_accel);
+		Vec3 air_vel = Global::vehicle_roll_pitch.inverse() * -Global::airflow_rel; 
 		Vec3 temp = air_vel; temp.z = 0;
 		float air_speed_horiz = temp.mag();
 		const float min_airspeed_for_high_speed_input = 10;
@@ -67,9 +67,9 @@ void doHover()
 
 
 		/// FORCES ///
-		force.y = -joystick_input.x * GlobalVars::vehicle_mass * GlobalVars::g0;
+		force.y = -joystick_input.x * Global::vehicle_mass * Global::g0;
 		force.z = VVIHold(throttle_position * lerp(10.0, 20.0, t, 1));
-		force.x = joystick_input.y * GlobalVars::vehicle_mass * GlobalVars::g0;
+		force.x = joystick_input.y * Global::vehicle_mass * Global::g0;
 
 		const float pusher_ratio = 1.5;
 		float pusher_force = lerp(0.0f, force.x / pusher_ratio, t, 1);
@@ -77,15 +77,15 @@ void doHover()
 		force.x -= pusher_force;
 		setFwdThrust(pusher_force);
 
-		GlobalVars::debug.println("pusher thrust: ", pusher_force);
+		Global::debug.println("pusher thrust: ", pusher_force);
 
 
 		
 		/// LOW SPEED TORQUES ///	
 		const float degrees_per_g = 10;
 		const float max_angle = 10;
-		float roll = rBound(-world_accel.y * degrees_per_g / GlobalVars::g0, -max_angle, max_angle);
-		float pitch = rBound(world_accel.x * degrees_per_g / GlobalVars::g0, -max_angle, max_angle);
+		float roll = rBound(-world_accel.y * degrees_per_g / Global::g0, -max_angle, max_angle);
+		float pitch = rBound(world_accel.x * degrees_per_g / Global::g0, -max_angle, max_angle);
 		float yaw_rate = joystick_input.z * 90;
 
 		
@@ -94,12 +94,12 @@ void doHover()
 		const float roll_rate = 120;
 		const float max_roll = 45;
 		float high_speed_roll = joystick_input.x * roll_rate;
-		if (GlobalVars::vehicle_roll_pitch.eulerAngles().x > max_roll)
+		if (Global::vehicle_roll_pitch.eulerAngles().x > max_roll)
 			bound(high_speed_roll, -roll_rate, 0);
-		else if ((GlobalVars::vehicle_roll_pitch.eulerAngles().x < -max_roll))
+		else if ((Global::vehicle_roll_pitch.eulerAngles().x < -max_roll))
 			bound(high_speed_roll, 0, roll_rate);
-		Vec3 proj = (GlobalVars::airflow_rel).unit();
-		float high_speed_pitch = (asin(proj.z) / GlobalVars::deg2rad);// -lerp(0, 5, t, 1);
+		Vec3 proj = (Global::airflow_rel).unit();
+		float high_speed_pitch = (asin(proj.z) / Global::deg2rad);// -lerp(0, 5, t, 1);
 		float side_slip = joystick_input.z * 10;
 
 		float combined_roll_rate = lerp(rotHoldHoverRate(roll, 0), high_speed_roll, t, 1);
@@ -110,23 +110,23 @@ void doHover()
 					rateHoldHover(combined_yaw_rate, 2);
 		holdSideSlip(side_slip);
 		holdAoA(-2);
-		GlobalVars::debug.println("high speed roll: ", high_speed_roll);
+		Global::debug.println("high speed roll: ", high_speed_roll);
 	}
 	
 
 
-	GlobalVars::debug.println("joystick input: ", joystick_input); GlobalVars::debug.println("torque applied: ", torque);
+	Global::debug.println("joystick input: ", joystick_input); Global::debug.println("torque applied: ", torque);
 
 	Vec3 target_fan_vectors[3];
 	///// Transform input forces and torques into left, right, and nose lift fan thrust vectors /////
-	GlobalVars::matrix.getData(force, torque, target_fan_vectors[0], target_fan_vectors[1], target_fan_vectors[2]);
+	Global::lift_fan_matrix.compute(force, torque, target_fan_vectors[0], target_fan_vectors[1], target_fan_vectors[2]);
 	for (int i = 0; i < 3; i++)
 		setMotorThrustDirection(target_fan_vectors[i], i + 2);
 }
 
 void doForward()
 {
-	float dt = GlobalVars::dt;
+	float dt = Global::dt;
 	hideProps(2000);
 	float joy_throttle = getUnsignedJoystickThrottle(false, 1);
 	Vec3 joystick_input = getJoystickRotValues();
@@ -136,25 +136,25 @@ void doForward()
 
 	joy_throttle -= 0.1;
 	if (joy_throttle < 0) joy_throttle *= 5;
-	float thrust = joy_throttle * GlobalVars::vehicle_mass * GlobalVars::g0;
+	float thrust = joy_throttle * Global::vehicle_mass * Global::g0;
 	
-	GlobalVars::debug.println("thrust lbs per engine: ", (float)(thrust * 0.224809 / 2));
+	Global::debug.println("thrust lbs per engine: ", (float)(thrust * 0.224809 / 2));
 
 	static bool auto_pilot = false;
 	static float target_vel = 0;
 	static float target_alt = 0;
 	static float target_heading = 0;
 	const float meters2feet = 3.28084;
-	if (GlobalVars::joy_thumb.pressed)
+	if (Global::joy_thumb.pressed)
 	{
 		auto_pilot = !auto_pilot;
-		target_vel = GlobalVars::airflow_rel.mag();
+		target_vel = Global::airflow_rel.mag();
 		target_vel = floor(target_vel * 2.237) / 2.237;
 
-		target_alt = XPLMGetDataf(GlobalVars::MSL_elevation) * meters2feet;
+		target_alt = XPLMGetDataf(Global::MSL_elevation) * meters2feet;
 		target_alt = (int)target_alt - ((int)target_alt % 10);
 
-		target_heading = (int)GlobalVars::vehicle_attitude.eulerAngles().z;
+		target_heading = (int)Global::vehicle_attitude.eulerAngles().z;
 		//target_heading = (int)XPLMGetDataf(GlobalVars::psi);
 	}
 	if (joystick_input.mag() > 0.2)
@@ -163,9 +163,9 @@ void doForward()
 	}
 	if (auto_pilot)
 	{
-		static BinaryScroller hat(&GlobalVars::joy_up, &GlobalVars::joy_down, 0.3, 20);
-		static BinaryScroller left_buttons(&GlobalVars::joy_5, &GlobalVars::joy_3, 0.3, 50);
-		static BinaryScroller hat_left_right(&GlobalVars::joy_left, &GlobalVars::joy_right, 0.3, 20);
+		static BinaryScroller hat(&Global::joy_up, &Global::joy_down, 0.3, 20);
+		static BinaryScroller left_buttons(&Global::joy_5, &Global::joy_3, 0.3, 50);
+		static BinaryScroller hat_left_right(&Global::joy_left, &Global::joy_right, 0.3, 20);
 
 		hat.apply(target_vel, (float)(1 / 2.237));
 		left_buttons.apply(target_alt, 10);
@@ -174,47 +174,47 @@ void doForward()
 		if (target_heading > 180) target_heading -= 360;	// bound target heading to -180, 180
 		else if (target_heading < -180) target_heading += 360;
 
-		float heading = GlobalVars::vehicle_attitude.eulerAngles().z;
-		GlobalVars::debug.println("");
-		GlobalVars::debug.println("AUTO PILOT ON");
-		GlobalVars::debug.println("Target speed mph: ", (float)(target_vel * 2.237));
-		GlobalVars::debug.println("Target MSL: ", target_alt);
-		GlobalVars::debug.println("Target Heading: ", headingCorrection(target_heading));
-		GlobalVars::debug.println("Heading: ", headingCorrection(heading));
-		GlobalVars::debug.println("Target Heading RAW: ", target_heading);
-		GlobalVars::debug.println("Heading RAW: ", heading);
-		GlobalVars::debug.println("psi: ", XPLMGetDataf(GlobalVars::psi));
-		GlobalVars::debug.println();
+		float heading = Global::vehicle_attitude.eulerAngles().z;
+		Global::debug.println("");
+		Global::debug.println("AUTO PILOT ON");
+		Global::debug.println("Target speed mph: ", (float)(target_vel * 2.237));
+		Global::debug.println("Target MSL: ", target_alt);
+		Global::debug.println("Target Heading: ", headingCorrection(target_heading));
+		Global::debug.println("Heading: ", headingCorrection(heading));
+		Global::debug.println("Target Heading RAW: ", target_heading);
+		Global::debug.println("Heading RAW: ", heading);
+		Global::debug.println("psi: ", XPLMGetDataf(Global::psi));
+		Global::debug.println();
 		
 
 		Vec3 auto_input(holdHeading(target_heading, 30, 10), holdMSL(target_alt, 80, 0.2), 0);
 		holdAirSpd(target_vel);
 
 		fwdStabilityControl(auto_input);
-		GlobalVars::debug.println("autopilot command ratios: ", auto_input);
+		Global::debug.println("autopilot command ratios: ", auto_input);
 	}
 	else
 	{
 		setFwdThrust(thrust);
 		fwdStabilityControl(joystick_input);
-		float t = (GlobalVars::airflow_rel.mag() - 45) / (55 - 45);	// 0 at 45, 1 at 55
+		float t = (Global::airflow_rel.mag() - 45) / (55 - 45);	// 0 at 45, 1 at 55
 		mixControlSurfaces(joystick_input, lerp(0.8, 0.0, t, 1));
 
-		if (GlobalVars::joy_3.held)
+		if (Global::joy_3.held)
 		{
 			setControlSurfaces(joystick_input);
 		}
 	}
 
-	GlobalVars::debug.println("CONTROL DEFLECTIONS: ", getControlSurfaces());
+	Global::debug.println("CONTROL DEFLECTIONS: ", getControlSurfaces());
 }
 
 void doOnGround()
 {
-	float dt = GlobalVars::dt;
+	float dt = Global::dt;
 	hideProps(2000);
 	float throttle[5] = { 0, 0, 0, 0, 0 };
-	XPLMSetDatavf(GlobalVars::throttle_ratio, throttle, 0, 5);
+	XPLMSetDatavf(Global::throttle_ratio, throttle, 0, 5);
 
 	float throttle_position = applyDeadzone(getSignedJoystickThrottle(), 0.05);
 	if (throttle_position > 0)
@@ -233,7 +233,7 @@ void findFlightState(Flight_state &flight_state)
 {
 	//static int prev_trigger_state = false;
 
-	if (GlobalVars::on_ground_flag)
+	if (Global::on_ground_flag)
 		flight_state = Flight_state::on_ground;
 
 	else
@@ -241,7 +241,7 @@ void findFlightState(Flight_state &flight_state)
 		if (flight_state == Flight_state::on_ground)
 			flight_state = Flight_state::hover;
 		//int trigger_state = getButton(GlobalVars::trigger);
-		if (GlobalVars::joy_trigger.pressed)//getButton(GlobalVars::trigger) && !prev_trigger_state)
+		if (Global::joy_trigger.pressed)//getButton(GlobalVars::trigger) && !prev_trigger_state)
 		{
 			switch (flight_state)
 			{
@@ -256,7 +256,7 @@ void findFlightState(Flight_state &flight_state)
 		}//prev_trigger_state = trigger_state;
 	}
 
-	if (GlobalVars::airflow_rel.mag() > 100)
+	if (Global::airflow_rel.mag() > 100)
 		flight_state = Flight_state::forward;
 }
 
@@ -264,46 +264,46 @@ float printPower()
 {
 	static RollingAvg fwd_power(100);
 	float fwd_motor_power[2];
-	XPLMGetDatavf(GlobalVars::motor_power, fwd_motor_power, 0, 2);
+	XPLMGetDatavf(Global::motor_power, fwd_motor_power, 0, 2);
 	//GlobalVars::debug.println("motor power", fwd_motor_power[0]);
 	float power = fwd_motor_power[0] + fwd_motor_power[1];
 	float horse_power = power / 746;
 	fwd_power.apply(horse_power);
-	GlobalVars::debug.println("POWER (hp): ", horse_power);
+	Global::debug.println("POWER (hp): ", horse_power);
 
 	return power;
 }
 
 void printMPG(float power)
 {
-	Vec3 ground_speed = GlobalVars::vehicle_attitude * (GlobalVars::airflow_rel * (3600 / 1609.0));
-	GlobalVars::debug.println(ground_speed);
+	Vec3 ground_speed = Global::vehicle_attitude * (Global::airflow_rel * (3600 / 1609.0));
+	Global::debug.println(ground_speed);
 	ground_speed.z = 0;
 
 	float mph = ground_speed.mag();
 	float gph = (power * 3600.0) / (43500000.0 * 0.4535 * 0.35 * 6.7);
 	float mpg = mph / gph;
-	GlobalVars::debug.println("mph: ", mph);
-	GlobalVars::debug.println("gph: ", gph);
-	GlobalVars::debug.println("Estimated MPG: ", mpg);
+	Global::debug.println("mph: ", mph);
+	Global::debug.println("gph: ", gph);
+	Global::debug.println("Estimated MPG: ", mpg);
 }
 
 void aircraftMAIN()
 {
-	GlobalVars::debug.reset(GlobalVars::l, GlobalVars::t);
-	if (XPLMGetDatai(GlobalVars::sim_paused))
+	Global::debug.reset(Global::l, Global::t);
+	if (XPLMGetDatai(Global::sim_paused))
 	{
-		GlobalVars::debug.println("PAUSED");
+		Global::debug.println("PAUSED");
 		return;
 	}
-	GlobalVars::debug.println("debug:");
+	Global::debug.println("debug:");
 	
 	updateButtons();
 	updateVehicleInfo();
 	findFlightState(flight_state);
-	GlobalVars::debug.println("vehicle rotation - world	: ", GlobalVars::vehicle_attitude.eulerAngles());
-	GlobalVars::debug.println("vehicle rotation rate	: ", GlobalVars::vehicle_rot_rate);
-	GlobalVars::debug.println("vehicle rotation accel	: ", GlobalVars::vehicle_rot_accel);
+	Global::debug.println("vehicle rotation - world	: ", Global::vehicle_attitude.eulerAngles());
+	Global::debug.println("vehicle rotation rate	: ", Global::vehicle_rot_rate);
+	Global::debug.println("vehicle rotation accel	: ", Global::vehicle_rot_accel);
 
 
 
@@ -313,15 +313,15 @@ void aircraftMAIN()
 	switch (flight_state)
 	{
 	case Flight_state::hover:
-		GlobalVars::debug.println("Flight state: hover");
+		Global::debug.println("Flight state: hover");
 		doHover();
 		break;
 	case Flight_state::forward:
-		GlobalVars::debug.println("Flight state: forward");
+		Global::debug.println("Flight state: forward");
 		doForward();
 		break;
 	case Flight_state::on_ground:
-		GlobalVars::debug.println("Flight state: on_ground");
+		Global::debug.println("Flight state: on_ground");
 		doOnGround();
 		break;
 	}
@@ -353,7 +353,7 @@ void draw_hello_world(XPLMWindowID in_window_id, void* in_refcon)
 		1 /* do depth testing */,
 		0 /* no depth writing */
 	);
-	XPLMGetWindowGeometry(in_window_id, &GlobalVars::l, &GlobalVars::t, &GlobalVars::r, &GlobalVars::b);
+	XPLMGetWindowGeometry(in_window_id, &Global::l, &Global::t, &Global::r, &Global::b);
 	
 	aircraftMAIN();
 	

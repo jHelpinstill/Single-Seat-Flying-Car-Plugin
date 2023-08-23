@@ -15,11 +15,11 @@ void BinaryScroller::smooth(float& input)
 	static float prev_input = 0;
 	if (input != prev_input)
 	{
-		float rate = (input - prev_input) / GlobalVars::dt;
+		float rate = (input - prev_input) / Global::dt;
 		if (rate > scroll_spd)
-			input = prev_input + scroll_spd * GlobalVars::dt;
+			input = prev_input + scroll_spd * Global::dt;
 		else if (rate < -scroll_spd)
-			input = prev_input - scroll_spd * GlobalVars::dt;
+			input = prev_input - scroll_spd * Global::dt;
 	}
 }
 
@@ -33,9 +33,9 @@ void BinaryScroller::apply(float& input, float step)
 	if (up_but->held || down_but->held)
 	{
 		if (repeat_timer < repeat_delay)
-			repeat_timer += GlobalVars::dt;
+			repeat_timer += Global::dt;
 		else
-			held_charge += scroll_spd * GlobalVars::dt;
+			held_charge += scroll_spd * Global::dt;
 		if (held_charge >= 1)
 		{
 			if (up_but->held)

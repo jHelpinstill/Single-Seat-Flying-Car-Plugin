@@ -9,7 +9,7 @@
 #include "Joystick.h"
 #include <vector>
 
-namespace GlobalVars
+namespace Global
 {
 	extern XPLMDataRef throttle_ratio, joystickThrottleAxis, alt_agl_handle, ground_speed,
 		frame_time, pitch, roll, psi, gear_nml_forces, thrust_vctr, spd_brk,
@@ -24,7 +24,7 @@ namespace GlobalVars
 	extern const float deg2rad;// = 3.1415926535 / 180;
 	extern const float g0;// = 9.80665;
 
-	extern ControlMatrix matrix;
+	extern ControlMatrix lift_fan_matrix;
 
 	extern Matrix inertia_tensor;// (3, 3);
 	extern Quat vehicle_attitude, vehicle_roll_pitch;
