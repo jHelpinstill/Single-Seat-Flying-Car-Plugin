@@ -14,6 +14,8 @@
 #include "ControlMatrix.h"
 #include "Matrix.h"
 #include "Quat.h"
+#include "RollingAvg.h"
+#include "BinaryScroller.h"
 
 ///// FUNCTIONS /////
 #include "XPlaneDataRefs.h"
@@ -258,6 +260,34 @@ void findFlightState(Flight_state &flight_state)
 		flight_state = Flight_state::forward;
 }
 
+float printPower()
+{
+	static RollingAvg fwd_power(100);
+	float fwd_motor_power[2];
+	XPLMGetDatavf(GlobalVars::motor_power, fwd_motor_power, 0, 2);
+	//GlobalVars::debug.println("motor power", fwd_motor_power[0]);
+	float power = fwd_motor_power[0] + fwd_motor_power[1];
+	float horse_power = power / 746;
+	fwd_power.apply(horse_power);
+	GlobalVars::debug.println("POWER (hp): ", horse_power);
+
+	return power;
+}
+
+void printMPG(float power)
+{
+	Vec3 ground_speed = GlobalVars::vehicle_rot * (GlobalVars::airflow_rel * (3600 / 1609.0));
+	GlobalVars::debug.println(ground_speed);
+	ground_speed.z = 0;
+
+	float mph = ground_speed.mag();
+	float gph = (power * 3600.0) / (43500000.0 * 0.4535 * 0.35 * 6.7);
+	float mpg = mph / gph;
+	GlobalVars::debug.println("mph: ", mph);
+	GlobalVars::debug.println("gph: ", gph);
+	GlobalVars::debug.println("Estimated MPG: ", mpg);
+}
+
 void aircraftMAIN()
 {
 	GlobalVars::debug.reset(GlobalVars::l, GlobalVars::t);
@@ -296,14 +326,12 @@ void aircraftMAIN()
 		break;
 	}
 
-	static RollingAvg fwd_power(100);
-	float fwd_motor_power[2];
-	XPLMGetDatavf(GlobalVars::motor_power, fwd_motor_power, 0, 2);
-	//GlobalVars::debug.println("motor power", fwd_motor_power[0]);
-	float power = fwd_motor_power[0] + fwd_motor_power[1];
-	power /= 746;
-	fwd_power.apply(power);
-	GlobalVars::debug.println("POWER: ", power);
+	PID* side_slip_PID = holdSideSlip(0.0, true);
+	adjustPID(side_slip_PID);
+
+	float power = printPower();
+	printMPG(power);
+	
 }
 
 bool plugin_setup_finished = false;
