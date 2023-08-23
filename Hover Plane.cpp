@@ -51,7 +51,7 @@ void doHover()
 		rotation.x *= 30;
 		rotation.y *= 30;
 		rotation.z *= 90;
-		torque = hoverStabilityControlTorque(rotation);
+		torque = attitudeControlTorque(rotation);
 	}
 	else // hover_mode1: joystick controls translation with rotation following acceleration at low speeds, and following prograde at high speeds
 	{

@@ -81,7 +81,7 @@ void findGroundState()
 	GlobalVars::on_ground_flag = (gear_forces > 1);
 	GlobalVars::debug.println("gear forces:", gear_forces);
 }
-Vec3 torqueForRotVelHold(
+Vec3 torqueForRateHold(
 	Vec3 target_rate,
 	Vec3& prev_error,
 	Vec3& error_accumulator,
@@ -142,14 +142,6 @@ float rotHoldHoverRate(float target_angle, int axis)
 
 Vec3 rotHoldHover(float target_angle, int axis)		// returns torque require to hold input rotation
 {
-	//static PID rotPIDs[3] =
-	//{
-	//	PID(4, 0.05, 0),
-	//	PID(4, 0.05, 0)
-	//};
-	//
-	//Vec3 angular_vel;
-	//angular_vel.n[axis] = rotPIDs[axis].update(target_angle, GlobalVars::vehicle_rot.eulerAngles().n[axis], GlobalVars::dt);
 	Vec3 angular_vel;
 	angular_vel.n[axis] = rotHoldHoverRate(target_angle, axis);
 	return rotRateHoldHover(angular_vel.n[axis], axis);
@@ -166,7 +158,7 @@ float sideSlipHoldHover(float target_slip_angle)
 	return yaw_rate;
 }
 
-Vec3 hoverStabilityControlTorque(Vec3 control_in)
+Vec3 attitudeControlTorque(Vec3 control_in)
 {
 
 	Vec3 torque;
@@ -175,25 +167,6 @@ Vec3 hoverStabilityControlTorque(Vec3 control_in)
 	torque += rotRateHoldHover(control_in.z, 2);
 
 	return torque;
-
-	/////	HOLD PITCH AND ROLL	 /////
-	//static Vec3 prev_error;
-	//const float p = 4;
-	//const float d = 0.05;
-	//
-	//Vec3 error = control_in - GlobalVars::vehicle_rot.eulerAngles();
-	//error.z = 0;	// remove yaw component
-	//Vec3 error_rate = (error - prev_error) / dt;
-	//prev_error = error;
-	//
-	//Vec3 commanded_rates = error * p + error_rate * d;
-	//commanded_rates.z = control_in.z;
-	//return rotRateHoldTorque(commanded_rates);
-	////static Vec3 prev_error_vel, error_accumulator_vel;
-	////const float p_v = 0.1;
-	////const float d_v = 0.002;
-	////const float i_v = 0.01;
-	////return torqueForRotVelHold(commanded_rates, prev_error_vel, error_accumulator_vel, p_v, d_v, i_v, dt);
 }
 
 void holdAoA(float angle)

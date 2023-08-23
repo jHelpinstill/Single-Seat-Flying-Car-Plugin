@@ -20,7 +20,7 @@ void holdAoA(float angle);
 float holdNormalGs(float Gs);
 PID* holdSideSlip(float angle, bool return_PID_ptr = false);
 
-Vec3 torqueForRotVelHold(
+Vec3 torqueForRateHold(
 	Vec3 target_rate,
 	Vec3& prev_error,
 	Vec3& error_accumulator,
@@ -29,7 +29,7 @@ Vec3 torqueForRotVelHold(
 	float i,
 	float dt);
 
-Vec3 hoverStabilityControlTorque(Vec3 control_in);
+Vec3 attitudeControlTorque(Vec3 control_in);
 void fwdStabilityControl(Vec3 command_input);
 
 /////   AUTOPILOT   /////
