@@ -25,13 +25,6 @@ namespace Global
 	extern const float deg2rad;// = 3.1415926535 / 180;
 	extern const float g0;// = 9.80665;
 
-	//extern ControlMatrix lift_fan_matrix;
-	//
-	//extern Matrix inertia_tensor;// (3, 3);
-	//extern Quat vehicle_attitude, vehicle_roll_pitch;
-	//extern Vec3 vehicle_rot_rate, vehicle_rot_accel, airflow_rel, vehicle_accel;
-	//extern float vehicle_mass;
-
 	///// JOYSTICK BUTTONS /////
 	extern const int trigger;// = 160;
 	extern const int hover_mode1;// = 164;
@@ -40,8 +33,6 @@ namespace Global
 	extern TextBox debug;
 	extern int l, t, r, b;
 	extern float font_color[3];// = { 1.0, 1.0, 1.0 }; // red, green, blue
-
-	//extern bool on_ground_flag;
 
 	extern float dt;
 	extern Button joy_3, joy_4, joy_5, joy_6, joy_7, joy_8, joy_9, joy_10, joy_11, joy_12, joy_trigger, joy_up, joy_down, joy_left, joy_right, joy_thumb;

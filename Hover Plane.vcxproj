@@ -16,7 +16,7 @@
     <ClCompile Include="Avionics.cpp" />
     <ClCompile Include="BinaryScroller.cpp" />
     <ClCompile Include="GlobalVars.cpp" />
-    <ClCompile Include="Hover Plane.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="Joystick.cpp" />
     <ClCompile Include="PID.cpp" />
     <ClCompile Include="ControlMatrix.cpp" />
