@@ -42,7 +42,7 @@ float PID::update(float setPoint, float state, float dt)
 	if(accumulator_upper_bound != 0 || accumulator_lower_bound != 0)
 	{
 		if (accumulator < accumulator_lower_bound) accumulator = accumulator_lower_bound;
-		if (accumulator > accumulator_upper_bound) accumulator = accumulator_upper_bound;
+		else if (accumulator > accumulator_upper_bound) accumulator = accumulator_upper_bound;
 	}
 
 	float p = P;
