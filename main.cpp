@@ -304,6 +304,7 @@ void aircraftMAIN()
 	Global::debug.println("vehicle rotation - world	: ", Global::vehicle.attitude.eulerAngles());
 	Global::debug.println("vehicle rotation rate	: ", Global::vehicle.rot_rate);
 	Global::debug.println("vehicle rotation accel	: ", Global::vehicle.rot_accel);
+	Global::debug.println("Relative Air velocity	: ", Global::vehicle.airflow_rel);
 
 
 
