@@ -80,30 +80,30 @@ PLUGIN_API int XPluginStart(
 	getDataRefs();
 
 
-	Global::vehicle.mass = XPLMGetDataf(Global::total_mass);
-	for (int i = 0; i < 3; i++)
-		Global::vehicle.inertia_tensor.a[i][i] = Global::vehicle.mass * XPLMGetDataf(Global::moments[i]);
-
-	XPLMSetDataf(Global::joystick_yaw_deadzone, 0.2);
-	Vec3 nose_fan_pos(-1.8, 0, 0.05), left_fan_pos(-11, 10, 0.57), right_fan_pos(-11, -10, 0.57), CoM_pos(-10, 0, 0.5);
-
-	nose_fan_pos *= 0.3048;
-	left_fan_pos *= 0.3048;
-	right_fan_pos *= 0.3048;
-	CoM_pos *= 0.3048;
-
-	Vec3 fan_positions[3];
-	for (int fan = 0; fan < 3; fan++)
-	{
-		for (int dir = 0; dir < 3; dir++)
-		{
-			float temp;
-			XPLMGetDatavf(Global::engine_positions[dir], &temp, 2 + fan, 1);
-			fan_positions[fan].n[dir] = temp;
-		}
-	}
-
-	Global::vehicle.lift_fan_matrix.fillMatrix(nose_fan_pos, left_fan_pos, right_fan_pos, CoM_pos);
+	//Global::vehicle.mass = XPLMGetDataf(Global::total_mass);
+	//for (int i = 0; i < 3; i++)
+	//	Global::vehicle.inertia_tensor.a[i][i] = Global::vehicle.mass * XPLMGetDataf(Global::moments[i]);
+	//
+	//XPLMSetDataf(Global::joystick_yaw_deadzone, 0.2);
+	//Vec3 nose_fan_pos(-1.8, 0, 0.05), left_fan_pos(-11, 10, 0.57), right_fan_pos(-11, -10, 0.57), CoM_pos(-10, 0, 0.5);
+	//
+	//nose_fan_pos *= 0.3048;
+	//left_fan_pos *= 0.3048;
+	//right_fan_pos *= 0.3048;
+	//CoM_pos *= 0.3048;
+	//
+	//Vec3 fan_positions[3];
+	//for (int fan = 0; fan < 3; fan++)
+	//{
+	//	for (int dir = 0; dir < 3; dir++)
+	//	{
+	//		float temp;
+	//		XPLMGetDatavf(Global::engine_positions[dir], &temp, 2 + fan, 1);
+	//		fan_positions[fan].n[dir] = temp;
+	//	}
+	//}
+	//
+	//Global::vehicle.lift_fan_matrix.fillMatrix(nose_fan_pos, left_fan_pos, right_fan_pos, CoM_pos);
 
 
 	// Position the window as a "free" floating window, which the user can drag around
@@ -129,7 +129,7 @@ void pluginSetup()
 	Global::vehicle.mass = XPLMGetDataf(Global::total_mass);
 	for (int i = 0; i < 3; i++)
 	{
-		Global::vehicle.inertia_tensor.a[i][i] = Global::vehicle.mass * XPLMGetDataf(Global::moments[i]);
+		Global::vehicle.inertia_tensor(i, i) = Global::vehicle.mass * XPLMGetDataf(Global::moments[i]);
 	}
 
 	XPLMSetDatai(Global::override_joystick, 1);
