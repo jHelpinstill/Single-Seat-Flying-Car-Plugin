@@ -5,18 +5,14 @@ TextBox::TextBox(int x, int y)
 	this->x = x;
 	this->y = y;
 }
-//template <class T>
-//void TextBox::println(char* s, T o)
-//{
-//	print(s);
-//	println(o);
-//}
-//template <class T>
-//void TextBox::print(char* s, T o)
-//{
-//	print(s);
-//	print(o);
-//}
+
+void TextBox::setPrecision(int precision)
+{
+	if (precision < 1) return;
+
+	float_precision = precision;
+}
+
 void TextBox::print(Vec3 v)
 {
 	print("x: ");
