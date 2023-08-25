@@ -208,7 +208,7 @@ void Matrix::invert()
 	//std::cout << "end of invert()" << std::endl;
 }
 
-float& Matrix::operator()(int i, int j)
+float& Matrix::element(int i, int j)
 {
 	if (i >= n || j >= m)
 		throw(MatInvalidOp());

@@ -128,9 +128,7 @@ void pluginSetup()
 
 	Global::vehicle.mass = XPLMGetDataf(Global::total_mass);
 	for (int i = 0; i < 3; i++)
-	{
-		Global::vehicle.inertia_tensor(i, i) = Global::vehicle.mass * XPLMGetDataf(Global::moments[i]);
-	}
+		Global::vehicle.inertia_tensor.element(i, i) = Global::vehicle.mass * XPLMGetDataf(Global::moments[i]);
 
 	XPLMSetDatai(Global::override_joystick, 1);
 

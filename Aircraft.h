@@ -10,16 +10,23 @@
 class Aircraft
 {
 public:
+	Vec3 nose_fan_pos, left_fan_pos, right_fan_pos, CoM;
+
 	ControlMatrix lift_fan_matrix;
-	Matrix inertia_tensor;
+	Matrix inertia_tensor = Matrix(3, 3);
 
 	Quat attitude, attitude_roll_pitch;
 	Vec3 rot_rate, rot_accel, airflow_rel, accel;
-	float mass;
+	float mass = 1;
 
 	bool on_ground = true;
 
-	Aircraft();
+	Aircraft() {}
+
+	void setNoseFanPos(Vec3 pos);
+	void setLeftFanPos(Vec3 pos);
+	void setRightFanPos(Vec3 pos);
+	void setCoM(Vec3 pos);
 
 };
 
