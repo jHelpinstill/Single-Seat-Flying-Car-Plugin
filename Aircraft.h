@@ -19,7 +19,7 @@ public:
 
 	bool on_ground = true;
 
-	Aircraft() {}
+	Aircraft();
 
 };
 

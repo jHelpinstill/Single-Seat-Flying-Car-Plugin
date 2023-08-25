@@ -28,6 +28,7 @@ public:
 	void clear();
 	void makeEmpty(int n, int m);
 	void makeIdentity();
+	float& operator()(int i, int j);
 
 	void invert();
 	void print();

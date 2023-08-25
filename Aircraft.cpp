@@ -2,7 +2,10 @@
 #include "GlobalVars.h"
 #include "Util.h"
 
-
+Aircraft::Aircraft()
+{
+	inertia_tensor = Matrix(3, 3);
+}
 
 void hideProps(float max_rpm)
 {

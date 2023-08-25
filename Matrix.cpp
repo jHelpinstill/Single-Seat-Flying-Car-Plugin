@@ -5,6 +5,7 @@ Matrix::Matrix(int n, int m)
 {
 	//std::cout << "empty constructor()" << std::endl;
 	makeEmpty(n, m);
+	makeIdentity();
 	//std::cout << "end of empty constructor()" << std::endl;
 }
 
@@ -205,6 +206,13 @@ void Matrix::invert()
 	}
 
 	//std::cout << "end of invert()" << std::endl;
+}
+
+float& Matrix::operator()(int i, int j)
+{
+	if (i >= n || j >= m)
+		throw(MatInvalidOp());
+	return a[i][j];
 }
 
 Matrix Matrix::operator*(Matrix& A)
