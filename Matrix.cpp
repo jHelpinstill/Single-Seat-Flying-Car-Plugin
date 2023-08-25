@@ -3,22 +3,17 @@
 
 Matrix::Matrix(int n, int m)
 {
-	//std::cout << "empty constructor()" << std::endl;
 	makeEmpty(n, m);
 	makeIdentity();
-	//std::cout << "end of empty constructor()" << std::endl;
 }
 
 Matrix::Matrix(float* data[], int n, int m)
 {
-	//std::cout << "float* data[] constructor()" << std::endl;
 	create(data, n, m);
-	//std::cout << "end of float* data[] constructor()" << std::endl;
 }
 
 Matrix::Matrix(const Matrix& A)
 {
-	//std::cout << "copy constructor()" << std::endl;
 	this->makeEmpty(A.n, A.m);
 	for (int i = 0; i < n; i++)
 	{
@@ -27,12 +22,10 @@ Matrix::Matrix(const Matrix& A)
 			this->a[i][j] = A.a[i][j];
 		}
 	}
-	//std::cout << "end of copy constructor()" << std::endl;
 }
 
 void Matrix::makeEmpty(int n, int m)
 {
-	//std::cout << "makeEmpty()" << std::endl;
 	clear();
 	this->n = n;
 	this->m = m;
@@ -46,12 +39,10 @@ void Matrix::makeEmpty(int n, int m)
 			a[row][col] = 0;
 		}
 	}
-	//std::cout << "end of makeEmpty()" << std::endl;
 }
 
 void Matrix::create(float* data[], int n, int m)
 {
-	//std::cout << "create()" << std::endl;
 	this->clear();
 	this->n = n;
 	this->m = m;
@@ -64,18 +55,15 @@ void Matrix::create(float* data[], int n, int m)
 			a[row][col] = data[row][col];
 		}
 	}
-	//std::cout << "end of create()" << std::endl;
 }
 
 void Matrix::clear()
 {
-	//std::cout << "clear()" << std::endl;
 	for (int i = 0; i < n; i++)
 	{
 		delete[] a[i];
 	}
 	n = m = 0;
-	//std::cout << "end of clear()" << std::endl;
 }
 
 void Matrix::makeIdentity()
@@ -99,7 +87,7 @@ void Matrix::invert()
 {
 	if (n != m)
 		return;
-	//std::cout << "invert()" << std::endl;
+
 	Matrix I(n, m);
 	I.makeIdentity();
 	Matrix A_copy = *this;
@@ -111,7 +99,6 @@ void Matrix::invert()
 		{
 			if (a[row][row] == 0)
 			{
-				//				std::cout << "swapped rows " << row;
 				for (int i = row + 1; i < n; i++)
 				{
 					if (a[i][row] != 0)
@@ -125,7 +112,6 @@ void Matrix::invert()
 						I.a[row] = I.a[i];
 						I.a[i] = temp;
 
-						//						std::cout << " and " << i << std::endl;
 						break;
 					}
 					if (i == n - 1)
@@ -137,7 +123,6 @@ void Matrix::invert()
 				float first_element = a[i][row];
 				if (first_element == 0)
 				{
-					//					std::cout << "\n skipped row " << row << std::endl;
 					continue;
 				}
 				for (int j = 0; j < m; j++)
@@ -154,10 +139,6 @@ void Matrix::invert()
 						I.a[i][j] -= I.a[row][j];
 					}
 				}
-				//				std::cout << "A" << std::endl;
-				//				this->println();
-				//				std::cout << "I" << std::endl;
-				//				I.println();
 			}
 		}
 
@@ -190,10 +171,6 @@ void Matrix::invert()
 				a[i][col] -= factor * a[j][col];
 				I.a[i][col] -= factor * I.a[j][col];
 			}
-			//			std::cout << "A" << std::endl;
-			//			this->println();
-			//			std::cout << "I" << std::endl;
-			//			I.println();
 		}
 	}
 
@@ -204,8 +181,6 @@ void Matrix::invert()
 			a[i][j] = I.a[i][j];
 		}
 	}
-
-	//std::cout << "end of invert()" << std::endl;
 }
 
 float& Matrix::element(int i, int j)
@@ -217,10 +192,9 @@ float& Matrix::element(int i, int j)
 
 Matrix Matrix::operator*(Matrix& A)
 {
-	//	std::cout << "before throw" << std::endl;
 	if (m != A.n)
 		throw(MatInvalidOp());
-	//	std::cout << "after throw" << std::endl;
+
 	Matrix B(n, A.m);
 	for (int i = 0; i < B.n; i++)
 	{
@@ -249,7 +223,6 @@ Vec3 Matrix::operator*(Vec3& v)
 	}
 	catch (MatError e)
 	{
-		//		std::cout << "Error: " << e.warning();
 		exit(0);
 	}
 
@@ -264,8 +237,7 @@ Vec3 Matrix::operator*(Vec3& v)
 
 void Matrix::operator=(const Matrix& A)
 {
-	//std::cout << "operator=()" << std::endl;
-//	this->clear();	
+
 	this->makeEmpty(A.n, A.m);
 
 	for (int i = 0; i < n; i++)
@@ -275,7 +247,6 @@ void Matrix::operator=(const Matrix& A)
 			a[i][j] = A.a[i][j];
 		}
 	}
-	//std::cout << "end of operator=()" << std::endl;
 }
 
 void Matrix::print()
@@ -298,7 +269,5 @@ void Matrix::println()
 
 Matrix::~Matrix()
 {
-	//std::cout << "destructor()" << std::endl;
 	this->clear();
-	//std::cout << "end of destructor()" << std::endl;
 }
