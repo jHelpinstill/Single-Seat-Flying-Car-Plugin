@@ -46,9 +46,9 @@ void getDataRefs()
 	Global::engine_positions[1] = XPLMFindDataRef("sim/flightmodel2/engines/location_y_mtr");
 	Global::engine_positions[2] = XPLMFindDataRef("sim/flightmodel2/engines/location_z_mtr");
 
-	Global::incoming_air_flow[0] = XPLMFindDataRef("sim/flightmodel/forces/vx_air_on_acf");
-	Global::incoming_air_flow[2] = XPLMFindDataRef("sim/flightmodel/forces/vy_air_on_acf");
-	Global::incoming_air_flow[1] = XPLMFindDataRef("sim/flightmodel/forces/vz_air_on_acf");
+	Global::air_relative_velocity[0] = XPLMFindDataRef("sim/flightmodel/forces/vx_air_on_acf");
+	Global::air_relative_velocity[1] = XPLMFindDataRef("sim/flightmodel/forces/vy_air_on_acf");
+	Global::air_relative_velocity[2] = XPLMFindDataRef("sim/flightmodel/forces/vz_air_on_acf");
 
 	Global::g_forces[0] = XPLMFindDataRef("sim/flightmodel/forces/g_axil");
 	Global::g_forces[1] = XPLMFindDataRef("sim/flightmodel/forces/g_side");
