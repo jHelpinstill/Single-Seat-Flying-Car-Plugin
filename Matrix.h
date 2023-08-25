@@ -36,7 +36,7 @@ public:
 
 	Matrix operator*(Matrix& A);
 	Vec3 operator*(Vec3& v);
-	void operator=(Matrix A);
+	void operator=(const Matrix& A);
 
 	~Matrix();
 };

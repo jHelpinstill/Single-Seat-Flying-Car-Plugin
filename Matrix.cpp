@@ -262,7 +262,7 @@ Vec3 Matrix::operator*(Vec3& v)
 	return u;
 }
 
-void Matrix::operator=(Matrix A)
+void Matrix::operator=(const Matrix& A)
 {
 	//std::cout << "operator=()" << std::endl;
 //	this->clear();	
