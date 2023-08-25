@@ -2,6 +2,7 @@
 #include "GlobalVars.h"
 #include "Util.h"
 
+
 void hideProps(float max_rpm)
 {
 	if(getMotorRPM(2) < max_rpm)

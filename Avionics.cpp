@@ -64,9 +64,9 @@ void findVehicleRotInfo()
 }
 void findRelativeAirflow()
 {
-	Global::vehicle.airflow_rel.y = -XPLMGetDataf(Global::incoming_air_flow[0]);
-	Global::vehicle.airflow_rel.x = -XPLMGetDataf(Global::incoming_air_flow[1]);
-	Global::vehicle.airflow_rel.z = XPLMGetDataf(Global::incoming_air_flow[2]);
+	Global::vehicle.airflow_rel.x = -XPLMGetDataf(Global::air_relative_velocity[2]);
+	Global::vehicle.airflow_rel.y = -XPLMGetDataf(Global::air_relative_velocity[0]);
+	Global::vehicle.airflow_rel.z = XPLMGetDataf(Global::air_relative_velocity[1]);
 }
 void findVehicleAccel()
 {
@@ -179,22 +179,22 @@ void holdAoA(float angle)
 
 PID* holdSideSlip(float angle, bool return_PID_ptr)
 {
-	const float default_p = 0.8;
-	static PID slip_PID(default_p, 0.15, 0.15, 10);
+	//const float default_p = 0.8;
+	static PID slip_PID(0.8, 0.15, 0.15, 10, 0.3, 1);
 
 	if (return_PID_ptr) return &slip_PID;
 
 	//float target_gs = 0.22 * angle;
 
 	float current_angle = asin(Global::vehicle.airflow_rel.unit().y) / Global::deg2rad;
-	if (abs(current_angle) < 1)
-	{
-		// reduce proportional component of PID as it closes in on zero degrees, prevents jittering when vehicle is very close to prograde
-		slip_PID.P = 0.1 + (default_p - 0.1) * abs(current_angle);
-
-	}
-	else
-		slip_PID.P = default_p;
+	//if (abs(current_angle) < 1)
+	//{
+	//	// reduce proportional component of PID as it closes in on zero degrees, prevents jittering when vehicle is very close to prograde
+	//	slip_PID.P = 0.1 + (default_p - 0.1) * abs(current_angle);
+	//
+	//}
+	//else
+	//	slip_PID.P = default_p;
 	float yaw_ratio = slip_PID.update(angle, current_angle, Global::dt);
 
 	//float yaw_ratio = slip_PID.update(target_gs * GlobalVars::g0, GlobalVars::vehicle_accel.y, GlobalVars::dt);

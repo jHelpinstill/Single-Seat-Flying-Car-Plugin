@@ -2,42 +2,24 @@
 
 float holdHeading(float target_heading, float max_bank_angle, float max_roll_rate)
 {
-	const float default_p = 5;
-	const float reduced_ratio = 0.1;
-
-	static PID heading_hold(default_p, 0.0, 0.0);
+	static PID heading_hold(5, 0.0, 0.0);
 	float heading = Global::vehicle.attitude.eulerAngles().z;
 	target_heading -= heading;
 	if (target_heading < -180) target_heading += 360;
 	else if (target_heading > 180) target_heading -= 360;
 
-	//if (abs(target_heading) < 1)
-	//	heading_hold.P = reduced_ratio* default_p + (1 - reduced_ratio) * default_p * abs(target_heading);
-	//else
-	//	heading_hold.P = default_p;
 	float target_bank_angle = -rBound(heading_hold.update(target_heading, 0, Global::dt), -max_bank_angle, max_bank_angle);
-
-	//GlobalVars::debug.println("HH PID INFO: ", heading_hold.error);
-	//GlobalVars::debug.println("target: ", target_heading);
-	//GlobalVars::debug.println("current: ", heading);
 
 	return holdBankAngle(target_bank_angle, max_roll_rate);
 }
 
 float holdBankAngle(float target_bank_angle, float max_roll_rate)
 {
-	const float default_p = 0.05;
-	const float reduced_ratio = 0.1;
-	const float reduced_width = 2;
-
 	max_roll_rate /= 180;	// ratio of 180 deg per sec
-	static PID roll_hold(default_p, 0.002, 0.01, 1);
+	static PID roll_hold(0.05, 0.002, 0.01, 1);
 	float roll = Global::vehicle.attitude_roll_pitch.eulerAngles().x;
 	float roll_error = target_bank_angle - roll;
-	//if (abs(roll_error) < reduced_width)
-	//	roll_hold.P = reduced_ratio * default_p + (1 - reduced_ratio) * default_p * abs(roll_error) / reduced_width;
-	//else
-	//	roll_hold.P = default_p;
+
 	return rBound(roll_hold.update(roll_error, 0, Global::dt), -max_roll_rate, max_roll_rate);
 }
 
