@@ -56,5 +56,5 @@ void holdAirSpd(float final_spd)
 	float prograde_spd = Global::vehicle.airflow_rel.mag();
 
 	float thrust = rBound(auto_throttle.update(final_spd, prograde_spd, dt), min_accel * Global::vehicle.mass, max_accel * Global::vehicle.mass);
-	setFwdThrust(thrust);
+	Global::vehicle.setFwdThrust(thrust);
 }

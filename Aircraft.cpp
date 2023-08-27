@@ -3,38 +3,38 @@
 #include "Util.h"
 
 
-void hideProps(float max_rpm)
+void Aircraft::hideProps(float max_rpm)
 {
 	if(getMotorRPM(2) < max_rpm)
 		XPLMSetDataf(Global::thrust_vctr, 1);
 }
 
-void showProps()
+void Aircraft::showProps()
 {
 	XPLMSetDataf(Global::thrust_vctr, 0.9);
 }
 
-void cutHoverThrottles()
+void Aircraft::cutHoverThrottles()
 {
 	float throttle[3] = { 0, 0, 0 };
 	XPLMSetDatavf(Global::throttle_ratio, throttle, 2, 3);
 }
 
-void setControlSurface(float input, int axis)
+void Aircraft::setControlSurface(float input, int axis)
 {
 	if (axis == 1 || axis == 2) input = -input;
 	bound(input, -1, 1);
 	XPLMSetDataf(Global::control_surface_actuators[axis], input);
 }
 
-void mixControlSurface(float input, int axis, float mix_ratio)
+void Aircraft::mixControlSurface(float input, int axis, float mix_ratio)
 {
 	float starting_ratio = XPLMGetDataf(Global::control_surface_actuators[axis]);
 	if (axis == 1 || axis == 2) starting_ratio = -starting_ratio;
 	setControlSurface(input * mix_ratio + starting_ratio * (1 - mix_ratio), axis);
 }
 
-Vec3 getControlSurfaces()
+Vec3 Aircraft::getControlSurfaces()
 {
 	Vec3 ratios;
 	for (int i = 0; i < 3; i++)
@@ -45,26 +45,26 @@ Vec3 getControlSurfaces()
 	return ratios;
 }
 
-void mixControlSurfaces(Vec3 input, float mix_ratio)
+void Aircraft::mixControlSurfaces(Vec3 input, float mix_ratio)
 {
 	for (int i = 0; i < 3; i++)
 		mixControlSurface(input.n[i], i, mix_ratio);
 }
 
-void setControlSurfaces(Vec3 input)
+void Aircraft::setControlSurfaces(Vec3 input)
 {
 	bound(input, -1, 1);
 	for (int i = 0; i < 3; i++)
 		setControlSurface(input.n[i], i);
 }
 
-void setFwdThrust(float thrust)
+void Aircraft::setFwdThrust(float thrust)
 {
 	setMotorThrustDirection(Vec3::Z * thrust / 2, 0);
 	setMotorThrustDirection(Vec3::Z * thrust / 2, 1);
 }
 
-void setMotorThrustDirection(Vec3 thrust, int motor)
+void Aircraft::setMotorThrustDirection(Vec3 thrust, int motor)
 {
 	bool can_reverse = false;
 	float max_angle = 0;
@@ -131,7 +131,7 @@ void setMotorThrustDirection(Vec3 thrust, int motor)
 	XPLMSetDatavf(Global::acf_sidecant, &side_angle, motor, 1);
 }
 
-float getMotorRPM(int motor)
+float Aircraft::getMotorRPM(int motor)
 {
 	float rpm;
 	XPLMGetDatavf(Global::engine_speed, &rpm, motor, 1);

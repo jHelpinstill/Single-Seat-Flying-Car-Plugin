@@ -32,10 +32,10 @@
 void doHover()
 {
 	float dt = Global::dt;
-	showProps();
+	Global::vehicle.showProps();
 	float fwd_throttle[2] = { 0, 0 };
 	XPLMSetDatavf(Global::throttle_ratio, fwd_throttle, 0, 2);
-	setControlSurfaces(Vec3::zero);
+	Global::vehicle.setControlSurfaces(Vec3::zero);
 
 	Vec3 joystick_input = getJoystickRotValues(1.5);
 	Vec3 force, torque;
@@ -75,7 +75,7 @@ void doHover()
 		float pusher_force = lerp(0.0f, force.x / pusher_ratio, t, 1);
 		if (pusher_force < 0) pusher_force = 0;
 		force.x -= pusher_force;
-		setFwdThrust(pusher_force);
+		Global::vehicle.setFwdThrust(pusher_force);
 
 		Global::debug.println("pusher thrust: ", pusher_force);
 
@@ -121,13 +121,13 @@ void doHover()
 	///// Transform input forces and torques into left, right, and nose lift fan thrust vectors /////
 	Global::vehicle.lift_fan_matrix.compute(force, torque, target_fan_vectors[0], target_fan_vectors[1], target_fan_vectors[2]);
 	for (int i = 0; i < 3; i++)
-		setMotorThrustDirection(target_fan_vectors[i], i + 2);
+		Global::vehicle.setMotorThrustDirection(target_fan_vectors[i], i + 2);
 }
 
 void doForward()
 {
 	float dt = Global::dt;
-	hideProps(2000);
+	Global::vehicle.hideProps(2000);
 	float joy_throttle = getUnsignedJoystickThrottle(false, 1);
 	Vec3 joystick_input = getJoystickRotValues();
 	joystick_input.x = applyDeadzone(joystick_input.x, 0, 3);
@@ -195,24 +195,24 @@ void doForward()
 	}
 	else
 	{
-		setFwdThrust(thrust);
+		Global::vehicle.setFwdThrust(thrust);
 		fwdStabilityControl(joystick_input);
 		float t = (Global::vehicle.airflow_rel.mag() - 45) / (55 - 45);	// 0 at 45, 1 at 55
-		mixControlSurfaces(joystick_input, lerp(0.8, 0.0, t, 1));
+		Global::vehicle.mixControlSurfaces(joystick_input, lerp(0.8, 0.0, t, 1));
 
 		if (Global::joy_3.held)
 		{
-			setControlSurfaces(joystick_input);
+			Global::vehicle.setControlSurfaces(joystick_input);
 		}
 	}
 
-	Global::debug.println("CONTROL DEFLECTIONS: ", getControlSurfaces());
+	Global::debug.println("CONTROL DEFLECTIONS: ", Global::vehicle.getControlSurfaces());
 }
 
 void doOnGround()
 {
 	float dt = Global::dt;
-	hideProps(2000);
+	Global::vehicle.hideProps(2000);
 	float throttle[5] = { 0, 0, 0, 0, 0 };
 	XPLMSetDatavf(Global::throttle_ratio, throttle, 0, 5);
 
@@ -247,7 +247,7 @@ void findFlightState(Flight_state &flight_state)
 			{
 			case Flight_state::hover:
 				flight_state = Flight_state::forward;
-				cutHoverThrottles();
+				Global::vehicle.cutHoverThrottles();
 				break;
 			case Flight_state::forward:
 				flight_state = Flight_state::hover;
