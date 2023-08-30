@@ -154,7 +154,7 @@ void doForward()
 		target_alt = XPLMGetDataf(Global::MSL_elevation) * meters2feet;
 		target_alt = (int)target_alt - ((int)target_alt % 10);
 
-		target_heading = (int)Global::vehicle.attitude.eulerAngles().z;
+		target_heading = (int)round(Global::vehicle.attitude.eulerAngles().z);
 		//target_heading = (int)XPLMGetDataf(GlobalVars::psi);
 	}
 	if (joystick_input.mag() > 0.2)
@@ -301,7 +301,7 @@ void aircraftMAIN()
 	updateButtons();
 	updateVehicleInfo();
 	findFlightState(flight_state);
-	Global::debug.println("vehicle rotation - world	: ", Global::vehicle.attitude.eulerAngles());
+	Global::debug.println("vehicle attitude - world	: ", Global::vehicle.attitude.eulerAngles());
 	Global::debug.println("vehicle rotation rate	: ", Global::vehicle.rot_rate);
 	Global::debug.println("vehicle rotation accel	: ", Global::vehicle.rot_accel);
 	Global::debug.println("Relative Air velocity	: ", Global::vehicle.airflow_rel);
