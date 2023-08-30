@@ -26,9 +26,6 @@
 #include "PluginSetup.h"
 
 
-///// THIS SHOULD ONLY APPEAR IN THE "PID OVERHAUL" BRANCH ON GITHUB /////
-
-
 void doHover()
 {
 	float dt = Global::dt;
