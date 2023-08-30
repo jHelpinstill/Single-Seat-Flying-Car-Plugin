@@ -19,7 +19,7 @@ void ControlMatrix::fillMatrix(Vec3 nose_fan_pos, Vec3 left_pos, Vec3 right_pos,
 	mat.invert();
 }
 
-void ControlMatrix::getData(Vec3 thrust, Vec3 moment, Vec3& left_fan, Vec3& right_fan, Vec3& nose_fan)
+void ControlMatrix::compute(Vec3 thrust, Vec3 moment, Vec3& left_fan, Vec3& right_fan, Vec3& nose_fan)
 {
 	Matrix v(6, 1);
 	for (int i = 0; i < 3; i++)

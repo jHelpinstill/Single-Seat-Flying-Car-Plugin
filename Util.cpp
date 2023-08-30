@@ -1,4 +1,5 @@
 #include "Util.h"
+#include "BinaryScroller.h"
 
 
 float rBound(float num, float lower, float upper)
@@ -57,19 +58,19 @@ float headingCorrection(float heading)
 	return heading;
 }
 
-RollingAvg::RollingAvg(int num_values_)
+void adjustPID(PID* pid)
 {
-	num_values = num_values_;
-	for (int i = 0; i < num_values; i++)
-		prev_values.push_back(0);
-}
+	if (pid == nullptr) return;
 
-void RollingAvg::apply(float& input)
-{
-	accumulator += input;
-	accumulator -= prev_values[values_index];
-	prev_values[values_index] = input;
-	values_index = (values_index + 1) % num_values;
-	input = accumulator / (float)num_values;
-	GlobalVars::debug.println("rolling avg accumulator: ", accumulator);
+	static BinaryScroller adjustP(&Global::joy_7, &Global::joy_8, 0.3, 0.5, false);
+	static BinaryScroller adjustD(&Global::joy_9, &Global::joy_10, 0.3, 0.5, false);
+	static BinaryScroller adjustI(&Global::joy_11, &Global::joy_12, 0.3, 0.5, false);
+	
+	adjustP.apply(pid->P, 0.005);
+	adjustD.apply(pid->D, 0.005);
+	adjustI.apply(pid->I, 0.005);
+	
+	Global::debug.println("P adjusted: ", pid->P);
+	Global::debug.println("D adjusted: ", pid->D);
+	Global::debug.println("I adjusted: ", pid->I);
 }

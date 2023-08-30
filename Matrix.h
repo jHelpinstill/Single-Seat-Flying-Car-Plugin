@@ -28,6 +28,7 @@ public:
 	void clear();
 	void makeEmpty(int n, int m);
 	void makeIdentity();
+	float& element(int i, int j);
 
 	void invert();
 	void print();
@@ -35,7 +36,7 @@ public:
 
 	Matrix operator*(Matrix& A);
 	Vec3 operator*(Vec3& v);
-	void operator=(Matrix A);
+	void operator=(const Matrix& A);
 
 	~Matrix();
 };

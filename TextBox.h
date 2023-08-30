@@ -25,11 +25,8 @@ public:
 	TextBox() {};
 	TextBox(int x, int y);
 
-	//template <class T>
-	//void println(char* s, T o);
-	//
-	//template <class T>
-	//void print(char* s, T o);
+	void setPrecision(int precision);
+
 	template <class T>
 	inline void println(char* s, T o)
 	{

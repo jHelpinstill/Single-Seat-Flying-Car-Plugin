@@ -1,4 +1,5 @@
 #include "PID.h"
+#include <cmath>
 
 PID::PID(float p, float d, float i)
 {
@@ -19,6 +20,18 @@ PID::PID(float p, float d, float i, float lower_bound, float upper_bound)
 	accumulator_lower_bound = lower_bound;
 }
 
+PID::PID(float p, float d, float i, float accumulator_radius, float reduced_p, float reduction_radius)
+{
+	P = p;
+	D = d;
+	I = i;
+	accumulator_upper_bound = accumulator_radius;
+	accumulator_lower_bound = -accumulator_radius;
+	this->reduced_p = reduced_p;
+	this->reduction_radius = reduction_radius;
+}
+
+
 float PID::update(float setPoint, float state, float dt)
 {
 	error = setPoint - state;
@@ -29,10 +42,21 @@ float PID::update(float setPoint, float state, float dt)
 	if(accumulator_upper_bound != 0 || accumulator_lower_bound != 0)
 	{
 		if (accumulator < accumulator_lower_bound) accumulator = accumulator_lower_bound;
-		if (accumulator > accumulator_upper_bound) accumulator = accumulator_upper_bound;
+		else if (accumulator > accumulator_upper_bound) accumulator = accumulator_upper_bound;
 	}
 
-	return P * error + D * errorRate + I * accumulator;
+	float p = P;
+
+	if (reduction_radius > 0)
+	{
+		if (abs(error) < reduction_radius)
+		{
+			float t = abs(error) / reduction_radius;
+			p = t * P + (1 - t) * reduced_p;
+		}
+	}
+
+	return p * error + D * errorRate + I * accumulator;
 };
 
 void PID::reset()

@@ -14,7 +14,7 @@ public:
 	
 	ControlMatrix() {}
 	void fillMatrix(Vec3 nose_fan_pos, Vec3 left_pos, Vec3 right_pos, Vec3 CoM_pos);
-	void getData(Vec3 thrust, Vec3 moment, Vec3& left_fan, Vec3& right_fan, Vec3& nose_fan);
+	void compute(Vec3 thrust, Vec3 moment, Vec3& left_fan, Vec3& right_fan, Vec3& nose_fan);
 
 };
 

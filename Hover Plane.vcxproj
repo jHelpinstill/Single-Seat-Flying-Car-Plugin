@@ -14,13 +14,15 @@
     <ClCompile Include="Aircraft.cpp" />
     <ClCompile Include="Autopilot.cpp" />
     <ClCompile Include="Avionics.cpp" />
+    <ClCompile Include="BinaryScroller.cpp" />
     <ClCompile Include="GlobalVars.cpp" />
-    <ClCompile Include="Hover Plane.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="Joystick.cpp" />
     <ClCompile Include="PID.cpp" />
     <ClCompile Include="ControlMatrix.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Quat.cpp" />
+    <ClCompile Include="RollingAvg.cpp" />
     <ClCompile Include="TextBox.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="Vec3.cpp" />
@@ -29,6 +31,7 @@
   <ItemGroup>
     <ClInclude Include="Aircraft.h" />
     <ClInclude Include="Avionics.h" />
+    <ClInclude Include="BinaryScroller.h" />
     <ClInclude Include="ControlMatrix.h" />
     <ClInclude Include="GlobalVars.h" />
     <ClInclude Include="Joystick.h" />
@@ -36,6 +39,7 @@
     <ClInclude Include="Quat.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="PID.h" />
+    <ClInclude Include="RollingAvg.h" />
     <ClInclude Include="TextBox.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="Vec3.h" />
@@ -55,13 +59,13 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
