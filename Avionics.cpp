@@ -106,8 +106,8 @@ Vec3 rateHoldHover(float target_rate, int axis)	// returns torque require to hol
 {
 	static PID rotPIDs[3] =
 	{
-		PID(0.1, 0.002, 0.01, 10),
-		PID(0.1, 0.002, 0.01, 10),
+		PID(0.1, 0.002, 0.01, 10, 0.02, 0.15),
+		PID(0.1, 0.002, 0.01, 10, 0.05, 0.15),
 		PID(0.2, 0.002, 0.01, 10)
 	};
 
@@ -131,12 +131,10 @@ float rotHoldHoverRate(float target_angle, int axis)
 
 Vec3 attitudeHoldHover(float target_angle, int axis)// returns torque require to hold given angle about axis
 {
-	//Vec3 angular_vel;
-	//angular_vel.n[axis] = rotHoldHoverRate(target_angle, axis);
 	static PID rotPIDs[3] =
 	{
-		PID(4, 0.05, 0),
-		PID(4, 0.05, 0)
+		PID(4, 0.05, 0, 0, 0.02, 0.15),
+		PID(4, 0.05, 0, 0, 0.05, 0.15)
 	};
 	float rate = rotPIDs[axis].update(target_angle, Global::vehicle.attitude.eulerAngles().n[axis], Global::dt);
 	return rateHoldHover(rate, axis);
@@ -171,10 +169,30 @@ void holdAoA(float angle)
 	float air_spd = Global::vehicle.airflow_rel.mag();
 	if (air_spd == 0) return;
 	pitch_ratio *= (75 / air_spd) * (75 / air_spd);
+
+	if (pitch_ratio > 1 || pitch_ratio < -1)
+		AoA_PID.accumulator -= AoA_PID.error * Global::dt;
+
 	Global::vehicle.setControlSurface(pitch_ratio, 1);
 
-	//GlobalVars::debug.println("target AoA: ", -angle);
+	Global::debug.println("AoA accumulator: ", AoA_PID.accumulator);
 	//GlobalVars::debug.println("actual AoA: ", AoA);
+}
+
+void holdRateFwd(float rate)
+{
+	static PID rate_PID(0.15, 0.002, 0.2, 2, 0.02, 5);
+	const float max_rate = 60;
+
+	bound(rate, -max_rate, max_rate);
+	Vec3 airflow = Global::vehicle.airflow_rel;
+	airflow.y = 0;
+	float lift_c = airflow.sqMag() / 5625;
+	if (lift_c < 0.5) lift_c = 0.5;
+
+	Global::vehicle.setControlSurface(rate_PID.update(rate, Global::vehicle.rot_rate.y, Global::dt) / lift_c, 1);
+
+	Global::debug.println("desired pitch rate: ", rate);
 }
 
 PID* holdSideSlip(float angle, bool return_PID_ptr)
@@ -203,16 +221,25 @@ PID* holdSideSlip(float angle, bool return_PID_ptr)
 
 float holdNormalGs(float Gs)
 {
-	static PID g_force_PID(0.0, 0.000, 0.75, 75);
+	//static PID g_force_PID(0.0, 0.000, 0.75, 75);
+	//
+	//float air_spd = Global::vehicle.airflow_rel.mag();
+	//if (air_spd == 0) return 0;
+	//float speed_correction_factor = (75 / air_spd) * (75 / air_spd);
+	//
+	//g_force_PID.I = 0.75 / speed_correction_factor;
+	//
+	//return -g_force_PID.update(Gs * Global::g0, Global::vehicle.accel.z, Global::dt) * speed_correction_factor;
 	
-	float air_spd = Global::vehicle.airflow_rel.mag();
-	if (air_spd == 0) return 0;
-	float speed_correction_factor = (75 / air_spd) * (75 / air_spd);
-	
-	g_force_PID.I = 0.75 / speed_correction_factor;
-	
-	return -g_force_PID.update(Gs * Global::g0, Global::vehicle.accel.z, Global::dt) * speed_correction_factor;
-	
+	static PID g_force_PID(0.0, 0.000, 0.2, 2);
+
+	float kinematic_Gs = ((Vec3::Z * Gs) - (Global::vehicle.attitude.inverse() * Vec3::Z)).z;//(Global::vehicle.attitude.inverse() * ((Global::vehicle.attitude * (Vec3::Z * Gs)) - Vec3::Z)).z;
+	float rate_estimate = (-((kinematic_Gs) * Global::g0) / Global::vehicle.airflow_rel.mag()) / Global::deg2rad;
+
+	return rate_estimate;
+	//float actual_accel = Global::vehicle.accel.z;
+
+	//return rate_estimate + g_force_PID.update(Gs * Global::g0, actual_accel, Global::dt);
 }
 
 void fwdStabilityControl(Vec3 command_input)
@@ -247,7 +274,10 @@ void fwdStabilityControl(Vec3 command_input)
 
 	Global::vehicle.setControlSurface(surface_ratios.x, 0);
 
-	holdAoA(holdNormalGs(command_input.y));
+	//holdAoA(holdNormalGs(command_input.y));
+
+	//float rate_for_gs =  (-(command_input.y * Global::g0) / Global::vehicle.airflow_rel.mag()) / Global::deg2rad;
+	holdRateFwd(holdNormalGs(command_input.y));
 	holdSideSlip(command_input.z);
 }
 
