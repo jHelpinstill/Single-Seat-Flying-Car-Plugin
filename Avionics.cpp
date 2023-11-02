@@ -162,32 +162,36 @@ Vec3 attitudeControlTorque(Vec3 control_in)
 
 void holdAoA(float angle)
 {
-	static PID AoA_PID(0.5, 0.05, 0.2, 5);
+	//static PID AoA_PID(0.5, 0.05, 0.2, 5);
+	//
+	//float AoA = (asin(Global::vehicle.airflow_rel.unit().z) / Global::deg2rad);
+	//float pitch_ratio = -AoA_PID.update(-angle, AoA, Global::dt);
+	//float air_spd = Global::vehicle.airflow_rel.mag();
+	//if (air_spd == 0) return;
+	//pitch_ratio *= (75 / air_spd) * (75 / air_spd);
+	//
+	//if (pitch_ratio > 1 || pitch_ratio < -1)
+	//	AoA_PID.accumulator -= AoA_PID.error * Global::dt;
+	//
+	//Global::vehicle.setControlSurface(pitch_ratio, 1);
+	//
+	//Global::debug.println("AoA accumulator: ", AoA_PID.accumulator);
+	////GlobalVars::debug.println("actual AoA: ", AoA);
 
+	static PID aoa_PID(0.5, 0.05, 0.0);
 	float AoA = (asin(Global::vehicle.airflow_rel.unit().z) / Global::deg2rad);
-	float pitch_ratio = -AoA_PID.update(-angle, AoA, Global::dt);
-	float air_spd = Global::vehicle.airflow_rel.mag();
-	if (air_spd == 0) return;
-	pitch_ratio *= (75 / air_spd) * (75 / air_spd);
-
-	if (pitch_ratio > 1 || pitch_ratio < -1)
-		AoA_PID.accumulator -= AoA_PID.error * Global::dt;
-
-	Global::vehicle.setControlSurface(pitch_ratio, 1);
-
-	Global::debug.println("AoA accumulator: ", AoA_PID.accumulator);
-	//GlobalVars::debug.println("actual AoA: ", AoA);
+	holdPitchRateFwd(-aoa_PID.update(angle, AoA, Global::dt));
 }
 
-void holdRateFwd(float rate)
+void holdPitchRateFwd(float rate)
 {
-	static PID rate_PID(0.15, 0.002, 0.2, 2, 0.02, 5);
+	static PID rate_PID(0.02, 0.00, 0.2, 5);
 	const float max_rate = 60;
 
 	bound(rate, -max_rate, max_rate);
 	Vec3 airflow = Global::vehicle.airflow_rel;
 	airflow.y = 0;
-	float lift_c = airflow.sqMag() / 5625;
+	float lift_c = XPLMGetDataf(Global::atm_density_ratio) * airflow.sqMag() / 5625;
 	if (lift_c < 0.5) lift_c = 0.5;
 
 	Global::vehicle.setControlSurface(rate_PID.update(rate, Global::vehicle.rot_rate.y, Global::dt) / lift_c, 1);
@@ -246,7 +250,7 @@ void fwdStabilityControl(Vec3 command_input)
 {
 	float dt = Global::dt;
 	static PID
-		roll(0.5, 0.01, 0.0),
+		roll(0.35, 0.00, 0.7, 80),
 		pitch(0.5, 0.02, 0.5);// ,
 		//yaw(50, 0.5, 0.0);
 
@@ -261,7 +265,7 @@ void fwdStabilityControl(Vec3 command_input)
 	command_input.z *= max_slip_angle;
 
 	Vec3 surface_ratios;
-	surface_ratios.x = roll.update(command_input.x * max_roll_rate, Global::vehicle.rot_rate.x, dt) + command_input.x;
+	surface_ratios.x = roll.update(command_input.x * max_roll_rate, Global::vehicle.rot_rate.x, dt);
 	surface_ratios.y = 0;
 
 	if (Global::vehicle.airflow_rel.sqMag() != 0) surface_ratios /= Global::vehicle.airflow_rel.sqMag() / 625;
@@ -277,7 +281,7 @@ void fwdStabilityControl(Vec3 command_input)
 	//holdAoA(holdNormalGs(command_input.y));
 
 	//float rate_for_gs =  (-(command_input.y * Global::g0) / Global::vehicle.airflow_rel.mag()) / Global::deg2rad;
-	holdRateFwd(holdNormalGs(command_input.y));
+	holdPitchRateFwd(holdNormalGs(command_input.y));
 	holdSideSlip(command_input.z);
 }
 

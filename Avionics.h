@@ -16,6 +16,7 @@ float rotHoldHoverRate(float target_angle, int axis);
 Vec3 attitudeHoldHover(float target_angle, int axis);
 float sideSlipHoldHover(float target_slip_angle);
 void holdAoA(float angle);
+void holdPitchRateFwd(float rate);
 float holdNormalGs(float Gs);
 PID* holdSideSlip(float angle, bool return_PID_ptr = false);
 

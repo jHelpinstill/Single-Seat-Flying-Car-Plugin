@@ -106,12 +106,14 @@ void doHover()
 					attitudeHoldHover(combined_pitch, 1) +
 					rateHoldHover(combined_yaw_rate, 2);
 		holdSideSlip(side_slip);
-		holdAoA(-2);
+		//holdRateFwd(0);
+		//holdAoA(0);
+		Global::vehicle.setControlSurfaces(Vec3::zero);
 		Global::debug.println("high speed roll: ", high_speed_roll);
 	}
 	
 
-
+	
 	Global::debug.println("joystick input: ", joystick_input); Global::debug.println("torque applied: ", torque);
 
 	Vec3 target_fan_vectors[3];
@@ -119,6 +121,7 @@ void doHover()
 	Global::vehicle.lift_fan_matrix.compute(force, torque, target_fan_vectors[0], target_fan_vectors[1], target_fan_vectors[2]);
 	for (int i = 0; i < 3; i++)
 		Global::vehicle.setMotorThrustDirection(target_fan_vectors[i], i + 2);
+	Global::debug.println("CONTROL DEFLECTIONS: ", Global::vehicle.getControlSurfaces());
 }
 
 void doForward()
@@ -253,8 +256,8 @@ void findFlightState(Flight_state &flight_state)
 		}//prev_trigger_state = trigger_state;
 	}
 
-	if (Global::vehicle.airflow_rel.mag() > 100)
-		flight_state = Flight_state::forward;
+	//if (Global::vehicle.airflow_rel.mag() > 100)
+	//	flight_state = Flight_state::forward;
 }
 
 float printPower()
@@ -288,12 +291,15 @@ void printMPG(float power)
 void aircraftMAIN()
 {
 	Global::debug.reset(Global::l, Global::t);
+	Global::stack.reset(Global::l + 300, Global::t);
+
 	if (XPLMGetDatai(Global::sim_paused))
 	{
 		Global::debug.println("PAUSED");
 		return;
 	}
 	Global::debug.println("debug:");
+	
 	
 	updateButtons();
 	updateVehicleInfo();
@@ -329,7 +335,6 @@ void aircraftMAIN()
 
 	float power = printPower();
 	printMPG(power);
-	
 }
 
 bool plugin_setup_finished = false;

@@ -67,4 +67,6 @@ void getDataRefs()
 	Global::joystick_axes = XPLMFindDataRef("sim/joystick/joystick_axis_values");
 
 	Global::sim_paused = XPLMFindDataRef("sim/time/paused");
+
+	Global::atm_density_ratio = XPLMFindDataRef("sim/weather/sigma");
 }
