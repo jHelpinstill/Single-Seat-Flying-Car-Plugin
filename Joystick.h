@@ -62,6 +62,7 @@ public:
 
 	Vec3 getRawAxes();
 	Vec3 getFilteredAxes();
+	Vec3 getFilteredAxes(float* deadzones, float* powers);
 
 	void setAxisFilter(int axis, float deadzone, float power);
 	void setThrottleFilter(float deadzone, float power);

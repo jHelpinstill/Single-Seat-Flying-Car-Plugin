@@ -129,6 +129,16 @@ Vec3 Joystick::getFilteredAxes()
 	return values;
 }
 
+Vec3 Joystick::getFilteredAxes(float* deadzones, float* powers)
+{
+	Vec3 values;
+	for (int i = 0; i < 3; i++)
+	{
+		values.n[i] = applyDeadzone(axes.n[i], deadzones[i], powers[i]);
+	}
+	return values;
+}
+
 void Joystick::retrieveThrottle()
 {
 	XPLMGetDatavf(Global::joystickThrottleAxis, &throttle, 28, 1);
