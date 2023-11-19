@@ -9,6 +9,11 @@
 
 class Aircraft
 {
+private:
+	// in ft
+	Vec3 fan_positions[3] = { Vec3(-1.8, 0, 0.05), Vec3(-11, 8.5, 0.57), Vec3(-11, -8.5, 0.57) }; // nose, left, right
+	Vec3 CoM_position = Vec3(-10, 0, 0.5);
+
 public:
 	ControlMatrix lift_fan_matrix;
 	Matrix inertia_tensor = Matrix(3, 3);
@@ -20,6 +25,9 @@ public:
 	bool on_ground = true;
 
 	Aircraft() {}
+
+	void begin();
+
 	void hideProps(float max_rpm);
 	void showProps();
 	void cutHoverThrottles();
@@ -33,4 +41,4 @@ public:
 	float getMotorRPM(int motor);
 };
 
-
+extern Aircraft aircraft;

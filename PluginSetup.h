@@ -4,6 +4,7 @@
 #include "XPLMGraphics.h"
 #include "XPLMDataAccess.h"
 #include "XPLMUtilities.h"
+#include "GlobalVars.h"
 
 #if IBM
 #include <windows.h>

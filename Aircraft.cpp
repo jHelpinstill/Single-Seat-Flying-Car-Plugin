@@ -2,6 +2,20 @@
 #include "GlobalVars.h"
 #include "Util.h"
 
+Aircraft aircraft;
+
+void Aircraft::begin()
+{
+	CoM_position *= 0.3048;
+	for (int i = 0; i < 3; i++)
+		fan_positions[i] *= 0.3048;
+
+	aircraft.lift_fan_matrix.fillMatrix(fan_positions[0], fan_positions[1], fan_positions[2], CoM_position);
+
+	aircraft.mass = XPLMGetDataf(Global::total_mass);
+	for (int i = 0; i < 3; i++)
+		aircraft.inertia_tensor.element(i, i) = aircraft.mass * XPLMGetDataf(Global::moments[i]);
+}
 
 void Aircraft::hideProps(float max_rpm)
 {
