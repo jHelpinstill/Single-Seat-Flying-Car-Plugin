@@ -56,7 +56,7 @@ public:
 		Button buttons[16];
 	};
 
-	Joystick() {}
+	Joystick();
 	
 	void update();
 

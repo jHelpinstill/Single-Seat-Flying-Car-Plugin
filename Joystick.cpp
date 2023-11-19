@@ -4,17 +4,26 @@
 
 Joystick joystick;
 
+Joystick::Joystick()
+{
+	for (int i = 0; i < 16; i++)
+	{
+		buttons[i] = { false, false, false, false };
+	}
+}
+
 void Joystick::printButtonNumbers()
 {
 	TextBox button_search(Global::l + 450, Global::t);
-	int buttons[3200];
-	XPLMGetDatavi(Global::joy_buttons, buttons, 0, 3200);
+	int all_buttons[3200];
+	XPLMGetDatavi(Global::joy_buttons, all_buttons, 0, 3200);
 	for (int i = 0; i < 3200; i++)
 	{
-		if (buttons[i])
+		if (all_buttons[i])
 			button_search.println(i);
 	}
 }
+
 void Joystick::printActiveAxes(float deadzone)
 {
 	TextBox axes_search(Global::l + 450, Global::t - 50);
