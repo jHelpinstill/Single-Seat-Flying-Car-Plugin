@@ -31,7 +31,6 @@ namespace Global
 	extern const int hover_mode2;// = 162;
 
 	extern TextBox debug;
-	extern TextBox stack;
 	extern int l, t, r, b;
 	extern float font_color[3];// = { 1.0, 1.0, 1.0 }; // red, green, blue
 

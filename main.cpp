@@ -291,7 +291,6 @@ void printMPG(float power)
 void aircraftMAIN()
 {
 	Global::debug.reset(Global::l, Global::t);
-	Global::stack.reset(Global::l + 300, Global::t);
 
 	if (XPLMGetDatai(Global::sim_paused))
 	{

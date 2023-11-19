@@ -21,7 +21,6 @@ namespace Global
 	const int hover_mode2 = 162;
 
 	TextBox debug;
-	TextBox stack;
 	int l, t, r, b;
 	float font_color[3] = { 1.0, 1.0, 1.0 }; // red, green, blue
 

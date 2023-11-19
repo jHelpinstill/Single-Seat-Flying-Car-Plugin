@@ -25,9 +25,6 @@ void Aircraft::setControlSurface(float input, int axis)
 	if (axis == 1 || axis == 2) input = -input;
 	bound(input, -1, 1);
 	XPLMSetDataf(Global::control_surface_actuators[axis], input);
-	
-	Global::stack.print("setControlSurface: axis ", axis);
-	Global::stack.println(", input ", input);
 }
 
 void Aircraft::mixControlSurface(float input, int axis, float mix_ratio)
