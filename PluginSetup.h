@@ -133,8 +133,6 @@ void pluginSetup()
 	XPLMSetDatai(Global::override_joystick, 1);
 
 	XPLMDebugString("SETUP COMPLETE\n");
-
-	buttonSetup();
 }
 
 PLUGIN_API void	XPluginStop(void)

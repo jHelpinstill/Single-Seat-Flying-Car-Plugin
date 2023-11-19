@@ -110,8 +110,10 @@ void Joystick::retrieveAxes()
 	for (int i = 0; i < 3; i++)
 	{
 		XPLMGetDatavf(Global::joystick_axes, &value, axis_ids[i], 1);
-		axes.n[i] = value;
+		axes.n[i] = (2 * value) - 1;
 	}
+	axes.y *= -1;
+	axes.z *= -1;
 }
 
 Vec3 Joystick::getRawAxes()
@@ -158,7 +160,7 @@ float Joystick::getSignedThrottle()
 float Joystick::getUnsignedThrottle(bool flip)
 {
 	float value = flip ? throttle : 1 - throttle;
-	return applyDeadzone(value, throttle_deadzone, throttle_power);
+	return applyDeadzone(value, 0, throttle_power);
 }
 
 void Joystick::setAxisFilter(int axis, float deadzone, float power)

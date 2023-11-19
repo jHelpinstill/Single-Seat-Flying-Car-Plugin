@@ -34,12 +34,15 @@ void doHover()
 	XPLMSetDatavf(Global::throttle_ratio, fwd_throttle, 0, 2);
 	Global::vehicle.setControlSurfaces(Vec3::zero);
 
-	Vec3 joystick_input = getJoystickRotValues(1.5);
+	float joy_deadzones[3] = { 0.05, 0.05, 0.3 }; float joy_powers[3] = { 1.5, 1.5, 1.5 };
+	Vec3 joystick_input = joystick.getFilteredAxes(joy_deadzones, joy_powers);//getJoystickRotValues(1.5);
+
+	joystick.setThrottleFilter(0.005, 3);
+	float throttle_position = joystick.getSignedThrottle();//applyDeadzone(getSignedJoystickThrottle(3), 0.005);
+	
 	Vec3 force, torque;
-
-	float throttle_position = applyDeadzone(getSignedJoystickThrottle(3), 0.005);
-
-	if (getButton(Global::hover_mode2)) // rotate in place w/ no translate
+	
+	if (joystick.button_3.held) // rotate in place w/ no translate
 	{
 		force.z = VVIHold(throttle_position * 10);
 		force = Global::vehicle.attitude_roll_pitch.inverse() * force;
@@ -128,11 +131,12 @@ void doForward()
 {
 	float dt = Global::dt;
 	Global::vehicle.hideProps(2000);
-	float joy_throttle = getUnsignedJoystickThrottle(false, 1);
-	Vec3 joystick_input = getJoystickRotValues();
-	joystick_input.x = applyDeadzone(joystick_input.x, 0, 3);
-	joystick_input.y = applyDeadzone(joystick_input.y, 0, 2);
-	joystick_input.z = applyDeadzone(joystick_input.z, 0, 2);
+
+	joystick.setThrottleFilter(0, 1);
+	float joy_throttle = joystick.getUnsignedThrottle(false);
+
+	float joy_deadzones[3] = { 0.05, 0.05, 0.3 }; float joy_powers[3] = { 3, 2, 2 };
+	Vec3 joystick_input = joystick.getFilteredAxes(joy_deadzones, joy_powers);
 
 	joy_throttle -= 0.1;
 	if (joy_throttle < 0) joy_throttle *= 5;
@@ -215,8 +219,9 @@ void doOnGround()
 	Global::vehicle.hideProps(2000);
 	float throttle[5] = { 0, 0, 0, 0, 0 };
 	XPLMSetDatavf(Global::throttle_ratio, throttle, 0, 5);
-
-	float throttle_position = applyDeadzone(getSignedJoystickThrottle(), 0.05);
+	
+	joystick.setThrottleFilter(0.05, 1);
+	float throttle_position = joystick.getSignedThrottle();
 	if (throttle_position > 0)
 		doHover();
 }
@@ -300,7 +305,7 @@ void aircraftMAIN()
 	Global::debug.println("debug:");
 	
 	
-	updateButtons();
+	joystick.update();
 	updateVehicleInfo();
 	findFlightState(flight_state);
 	Global::debug.println("vehicle attitude - world	: ", Global::vehicle.attitude.eulerAngles());
@@ -310,8 +315,8 @@ void aircraftMAIN()
 
 
 
-	showButtonNumbers();
-	//showJoystickAxes();
+	//joystick.printButtonNumbers();
+	//joystick.printActiveAxes();
 	static bool exception_thrown = false;
 	switch (flight_state)
 	{
