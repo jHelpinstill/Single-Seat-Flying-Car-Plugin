@@ -2,8 +2,9 @@
 #include "GlobalVars.h"
 #include "Util.h"
 
+Joystick joystick;
 
-void showButtonNumbers()
+void Joystick::printButtonNumbers()
 {
 	TextBox button_search(Global::l + 450, Global::t);
 	int buttons[3200];
@@ -14,7 +15,7 @@ void showButtonNumbers()
 			button_search.println(i);
 	}
 }
-void showJoystickAxes(float dead_zone)
+void Joystick::printActiveAxes(float deadzone)
 {
 	TextBox axes_search(Global::l + 450, Global::t - 50);
 	float axes[500];
@@ -22,7 +23,7 @@ void showJoystickAxes(float dead_zone)
 	int button_counter = 0;
 	for (int i = 0; i < 500; i++)
 	{
-		if (axes[i] >= dead_zone || axes[i] <= -dead_zone)
+		if (axes[i] >= deadzone || axes[i] <= -deadzone)
 		{
 			axes_search.print(i);
 			axes_search.println(": ", axes[i]);
@@ -33,50 +34,26 @@ void showJoystickAxes(float dead_zone)
 	}
 }
 
-std::vector<Button*> buttons;
-void buttonSetup()
+void Joystick::update()
 {
-	Global::joy_trigger.id = 160; buttons.push_back(&Global::joy_trigger);
-
-	Global::joy_3.id = 162; buttons.push_back(&Global::joy_3);
-	Global::joy_4.id = 163; buttons.push_back(&Global::joy_4);
-	Global::joy_5.id = 164; buttons.push_back(&Global::joy_5);
-	Global::joy_6.id = 165; buttons.push_back(&Global::joy_6);
-	Global::joy_7.id = 166; buttons.push_back(&Global::joy_7);
-	Global::joy_8.id = 167; buttons.push_back(&Global::joy_8);
-	Global::joy_9.id = 168; buttons.push_back(&Global::joy_9);
-	Global::joy_10.id = 169; buttons.push_back(&Global::joy_10);
-	Global::joy_11.id = 170; buttons.push_back(&Global::joy_11);
-	Global::joy_12.id = 171; buttons.push_back(&Global::joy_12);
-
-	Global::joy_up.id = 172; buttons.push_back(&Global::joy_up);
-	Global::joy_down.id = 176; buttons.push_back(&Global::joy_down);
-	Global::joy_left.id = 178; buttons.push_back(&Global::joy_left);
-	Global::joy_right.id = 174; buttons.push_back(&Global::joy_right);
-	Global::joy_thumb.id = 161; buttons.push_back(&Global::joy_thumb);
-
-
-	for (int i = 0; i < buttons.size(); i++)
-		buttons[i]->prev_state = false;
-}
-
-void updateButtons()
-{
-	for (int i = 0; i < buttons.size(); i++)
+	for (int i = 0; i < 16; i++)
 	{
-		buttons[i]->held = getButton(buttons[i]->id);
+		buttons[i].held = retrieveButtonState(but_ids[i]);
 
-		buttons[i]->pressed = buttons[i]->released = false;
-		if (buttons[i]->held)
-			buttons[i]->pressed = !buttons[i]->prev_state;
+		buttons[i].pressed = buttons[i].released = false;
+		if (buttons[i].held)
+			buttons[i].pressed = !buttons[i].prev_state;
 		else
-			buttons[i]->released = buttons[i]->prev_state;
+			buttons[i].released = buttons[i].prev_state;
 
-		buttons[i]->prev_state = buttons[i]->held;
+		buttons[i].prev_state = buttons[i].held;
 	}
+
+	retrieveAxes();
+	retrieveThrottle();
 }
 
-void adjustWithButtonf(float& input, float step, Button& button_up, Button& button_down, float repeat_delay)
+void Joystick::adjustWithButton(float& input, float step, Button& button_up, Button& button_down, float repeat_delay)
 {
 	static float repeat_timer;
 	static float held_charge = 0;
@@ -110,53 +87,69 @@ void adjustWithButtonf(float& input, float step, Button& button_up, Button& butt
 		
 }
 
-bool getButton(int button)
+bool Joystick::retrieveButtonState(int but_id)
 {
 	int value;
-	XPLMGetDatavi(Global::joy_buttons, &value, button, 1);
+	XPLMGetDatavi(Global::joy_buttons, &value, but_id, 1);
 	return (value == true);
 }
 
-float getJoystickAxis(int axis)
+void Joystick::retrieveAxes()
 {
-	float* value = new float;
-	XPLMGetDatavf(Global::joystick_axes, value, axis, 1);
-	return *value;
+	float value;
+	
+	for (int i = 0; i < 3; i++)
+	{
+		XPLMGetDatavf(Global::joystick_axes, &value, axis_ids[i], 1);
+		axes.n[i] = value;
+	}
 }
 
-
-Vec3 getJoystickRotValues(float power)
+Vec3 Joystick::getRawAxes()
 {
-	Vec3 data_v;
-
-	//data_v.x = XPLMGetDataf(yoke[1]);
-	//data_v.y = -XPLMGetDataf(yoke[0]);
-	//data_v.z = -XPLMGetDataf(yoke[2]);
-
-	data_v.x = (getJoystickAxis(26) * 2 - 1);
-	data_v.y = -(getJoystickAxis(25) * 2 - 1);
-	data_v.z = -(getJoystickAxis(27) * 2 - 1);
-
-	data_v.x = applyDeadzone(data_v.x, 0.05, power);
-	data_v.y = applyDeadzone(data_v.y, 0.05, power);
-	data_v.z = applyDeadzone(data_v.z, 0.3, power);
-
-	return data_v;
+	return axes;
 }
 
-float getSignedJoystickThrottle(float power)
+Vec3 Joystick::getFilteredAxes()
 {
-	float* data = new float;
-	XPLMGetDatavf(Global::joystickThrottleAxis, data, 28, 1);
-	float throttle = 1 - (*data * 2);
-
-	return applyDeadzone(throttle, 0, power);
+	Vec3 values;
+	for (int i = 0; i < 3; i++)
+	{
+		values.n[i] = applyDeadzone(axes.n[i], axis_deadzones[i], axis_powers[i]);
+	}
+	return values;
 }
 
-float getUnsignedJoystickThrottle(bool flip, float power)
+void Joystick::retrieveThrottle()
 {
-	float* data = new float;
-	XPLMGetDatavf(Global::joystickThrottleAxis, data, 28, 1);
-	data[0] = flip ? *data : 1 - *data;
-	return applyDeadzone(*data, 0, power);
+	XPLMGetDatavf(Global::joystickThrottleAxis, &throttle, 28, 1);
+}
+
+float Joystick::getRawThrottle()
+{
+	return throttle;
+}
+
+float Joystick::getSignedThrottle()
+{
+	float value = 1 - (throttle * 2);
+	return applyDeadzone(value, throttle_deadzone, throttle_power);
+}
+
+float Joystick::getUnsignedThrottle(bool flip)
+{
+	float value = flip ? throttle : 1 - throttle;
+	return applyDeadzone(value, throttle_deadzone, throttle_power);
+}
+
+void Joystick::setAxisFilter(int axis, float deadzone, float power)
+{
+	axis_deadzones[axis] = deadzone;
+	axis_powers[axis] = power;
+}
+
+void Joystick::setThrottleFilter(float deadzone, float power)
+{
+	throttle_deadzone = deadzone;
+	throttle_power = power;
 }
