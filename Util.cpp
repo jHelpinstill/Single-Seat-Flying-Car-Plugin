@@ -1,5 +1,6 @@
 #include "Util.h"
 #include "BinaryScroller.h"
+#include "Joystick.h"
 
 
 float rBound(float num, float lower, float upper)
@@ -62,9 +63,9 @@ void adjustPID(PID* pid)
 {
 	if (pid == nullptr) return;
 
-	static BinaryScroller adjustP(&Global::joy_7, &Global::joy_8, 0.3, 0.5, false);
-	static BinaryScroller adjustD(&Global::joy_9, &Global::joy_10, 0.3, 0.5, false);
-	static BinaryScroller adjustI(&Global::joy_11, &Global::joy_12, 0.3, 0.5, false);
+	static BinaryScroller adjustP(&joystick.button_7, &joystick.button_8, 0.3, 0.5, false);
+	static BinaryScroller adjustD(&joystick.button_9, &joystick.button_10, 0.3, 0.5, false);
+	static BinaryScroller adjustI(&joystick.button_11, &joystick.button_12, 0.3, 0.5, false);
 	
 	adjustP.apply(pid->P, 0.005);
 	adjustD.apply(pid->D, 0.005);

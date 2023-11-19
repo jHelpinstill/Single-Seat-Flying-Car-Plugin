@@ -5,6 +5,7 @@
 #include "XPLMDataAccess.h"
 #include "XPLMUtilities.h"
 #include "GlobalVars.h"
+#include "Aircraft.h"
 
 #if IBM
 #include <windows.h>
@@ -118,19 +119,7 @@ PLUGIN_API int XPluginStart(
 
 void pluginSetup()
 {
-	Vec3 nose_fan_pos(-1.8, 0, 0.05), left_fan_pos(-11, 8.5, 0.57), right_fan_pos(-11, -8.5, 0.57), CoM_pos(-10, 0, 0.5);
-
-	nose_fan_pos *= 0.3048;
-	left_fan_pos *= 0.3048;
-	right_fan_pos *= 0.3048;
-	CoM_pos *= 0.3048;
-
-	Global::vehicle.lift_fan_matrix.fillMatrix(nose_fan_pos, left_fan_pos, right_fan_pos, CoM_pos);
-
-	Global::vehicle.mass = XPLMGetDataf(Global::total_mass);
-	for (int i = 0; i < 3; i++)
-		Global::vehicle.inertia_tensor.element(i, i) = Global::vehicle.mass * XPLMGetDataf(Global::moments[i]);
-
+	aircraft.begin();
 	XPLMSetDatai(Global::override_joystick, 1);
 
 	XPLMDebugString("SETUP COMPLETE\n");

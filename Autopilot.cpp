@@ -3,7 +3,7 @@
 float holdHeading(float target_heading, float max_bank_angle, float max_roll_rate)
 {
 	static PID heading_hold(5, 0.0, 0.0);
-	float heading = Global::vehicle.attitude.eulerAngles().z;
+	float heading = aircraft.attitude.eulerAngles().z;
 	target_heading -= heading;
 	if (target_heading < -180) target_heading += 360;
 	else if (target_heading > 180) target_heading -= 360;
@@ -17,7 +17,7 @@ float holdBankAngle(float target_bank_angle, float max_roll_rate)
 {
 	max_roll_rate /= 180;	// ratio of 180 deg per sec
 	static PID roll_hold(0.05, 0.002, 0.01, 1);
-	float roll = Global::vehicle.attitude_roll_pitch.eulerAngles().x;
+	float roll = aircraft.attitude_roll_pitch.eulerAngles().x;
 	float roll_error = target_bank_angle - roll;
 
 	return rBound(roll_hold.update(roll_error, 0, Global::dt), -max_roll_rate, max_roll_rate);
@@ -53,8 +53,8 @@ void holdAirSpd(float final_spd)
 	const float max_accel = 5;	// ms^-2
 	const float min_accel = -3;
 
-	float prograde_spd = Global::vehicle.airflow_rel.mag();
+	float prograde_spd = aircraft.airflow_rel.mag();
 
-	float thrust = rBound(auto_throttle.update(final_spd, prograde_spd, dt), min_accel * Global::vehicle.mass, max_accel * Global::vehicle.mass);
-	Global::vehicle.setFwdThrust(thrust);
+	float thrust = rBound(auto_throttle.update(final_spd, prograde_spd, dt), min_accel * aircraft.mass, max_accel * aircraft.mass);
+	aircraft.setFwdThrust(thrust);
 }
