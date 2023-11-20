@@ -24,8 +24,8 @@ private:
 
 	void setHoverMotors(Vec3* thrust_vectors);
 	void setForwardMotors();
-	
-	void findRot();
+
+	void findAttitude();
 	void findAccel();
 	void findRelativeAirflow();
 	void findGroundState();
@@ -37,6 +37,9 @@ public:
 	Quat attitude, attitude_roll_pitch;
 	Vec3 rot_rate, rot_accel, airflow_rel, accel;
 	float mass = 1;
+	float alt_MSL = 0;
+	float alt_agl = 0;
+	float vert_vel = 0;
 
 	bool on_ground = true;
 
@@ -54,21 +57,20 @@ public:
 	void addHoverLinearAccel(Vec3 accel);
 	void addHoverForce(Vec3 force);
 
-	void addControlSurfaceInput(Vec3 input);
-
 	void setForwardThrust(float thrust);
 
 	void cutHoverThrottles();
 	void cutForwardThrottles();
 
+	void addControlSurfaceInput(Vec3 input);
 	void setControlSurface(float input, int axis);
 	void mixControlSurface(float input, int axis, float mix_ratio);
 	void setControlSurfaces(Vec3 input);
 	void mixControlSurfaces(Vec3 input, float mix_ratio);
 	Vec3 getControlSurfaces();
-	
+
 	float getMotorRPM(int motor);
-	
+
 };
 
 extern Aircraft aircraft;

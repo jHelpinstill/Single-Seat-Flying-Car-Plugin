@@ -19,7 +19,14 @@ void Aircraft::begin()
 
 void Aircraft::update()
 {
-	findRot();
+	alt_MSL = XPLMGetDataf(Global::MSL_elevation);
+	alt_agl = XPLMGetDataf(Global::alt_agl_handle);
+
+	static float prev_alt = 0;
+	vert_vel = (aircraft.alt_MSL - prev_alt) / Global::dt;
+	prev_alt = aircraft.alt_MSL;
+
+	findAttitude();
 	findRelativeAirflow();
 	findAccel();
 	findGroundState();
@@ -205,7 +212,7 @@ float Aircraft::getMotorRPM(int motor)
 	return rpm;
 }
 
-void Aircraft::findRot()
+void Aircraft::findAttitude()
 {
 	float dt = Global::dt;
 	float roll_ = XPLMGetDataf(Global::roll);

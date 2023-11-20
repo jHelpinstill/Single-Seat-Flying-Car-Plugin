@@ -37,35 +37,30 @@ void doHover()
 	Vec3 joystick_input = joystick.getFilteredAxes(Vec3(0.05, 0.05, 0.3), Vec3(1.5, 1.5, 1.5));
 	float throttle_position = joystick.getSignedThrottle(0.005, 3);
 	
-	Vec3 force, torque;
+	
 	
 	if (joystick.button_3.held) // rotate in place w/ no translate
 	{
-		force.z = HoldHoverVV(throttle_position * 10);
-		force = aircraft.attitude_roll_pitch.inverse() * force;
-
-		Vec3 rotation = joystick_input;
-		rotation.x *= 30;
-		rotation.y *= 30;
-		rotation.z *= 90;
-		torque = attitudeControlTorque(rotation);
+		holdPositionVaryAttitude(joystick_input, throttle_position);
 	}
 	else // hover_mode1: joystick controls translation with rotation following acceleration at low speeds, and following prograde at high speeds
 	{
-		
-		Vec3 world_accel = (aircraft.attitude_roll_pitch * aircraft.accel);
+		Vec3 force, torque;
+
+		Vec3 world_accel = aircraft.attitude_roll_pitch * aircraft.accel;
 		Vec3 air_vel = aircraft.attitude_roll_pitch.inverse() * -aircraft.airflow_rel; 
 		Vec3 temp = air_vel; temp.z = 0;
 		float air_speed_horiz = temp.mag();
 		const float min_airspeed_for_high_speed_input = 10;
 		const float speed_threshhold = 45;
 
-		float t = rBound((air_speed_horiz - min_airspeed_for_high_speed_input) / (speed_threshhold - min_airspeed_for_high_speed_input), 0, 1);//applyDeadzone(air_speed_horiz, min_airspeed_for_high_speed_input, 1, speed_threshhold) / speed_threshhold;
+		float t = rBound((air_speed_horiz - min_airspeed_for_high_speed_input) / (speed_threshhold - min_airspeed_for_high_speed_input), 0, 1);
 
 
 		/// FORCES ///
+		static PID vv_PID(2, 0.5, 0.02, 0.1);
 		force.y = -joystick_input.x * aircraft.mass * Global::g0;
-		force.z = HoldHoverVV(throttle_position * lerp(10.0, 20.0, t, 1));
+		force.z = thrustForVVHoldHover(throttle_position * lerp(10.0, 20.0, t, 1), vv_PID);
 		force.x = joystick_input.y * aircraft.mass * Global::g0;
 
 		const float pusher_ratio = 1.5;
@@ -85,8 +80,6 @@ void doHover()
 		float pitch = rBound(world_accel.x * degrees_per_g / Global::g0, -max_angle, max_angle);
 		float yaw_rate = joystick_input.z * 90;
 
-		
-
 		/// HIGH SPEED TORQUES ///
 		const float roll_rate = 120;
 		const float max_roll = 45;
@@ -99,27 +92,37 @@ void doHover()
 		float high_speed_pitch = (asin(proj.z) / Global::deg2rad);// -lerp(0, 5, t, 1);
 		float side_slip = joystick_input.z * 10;
 
+		/// COMBINING ///
+		static PID ss_PID(5, 0.05, 0);
+		static PID att_PIDs[2] =
+		{
+			PID(4, 0.05, 0, 0, 0.02, 0.15),
+			PID(4, 0.05, 0, 0, 0.05, 0.15)
+		};
+		static PID rate_PIDs[3] =
+		{
+			PID(0.1, 0.002, 0.01, 10, 0.02, 0.15),
+			PID(0.1, 0.002, 0.01, 10, 0.05, 0.15),
+			PID(0.2, 0.002, 0.01, 10)
+		};
 		float combined_roll_rate = lerp(rotHoldHoverRate(roll, 0), high_speed_roll, t, 1);
 		float combined_pitch = lerp(pitch, high_speed_pitch, t, 1);
-		float combined_yaw_rate = lerp(yaw_rate, sideSlipHoldHover(side_slip), t, 1);
-		torque =	rateHoldHover(combined_roll_rate, 0) +
-					attitudeHoldHover(combined_pitch, 1) +
-					rateHoldHover(combined_yaw_rate, 2);
+		float combined_yaw_rate = lerp(yaw_rate, yawRateForSSHoldHover(side_slip, ss_PID), t, 1);
+		torque =	torqueForAttitudeRateHoldHover(combined_roll_rate, 0, rate_PIDs[0]) +
+					torqueForAttitudeHoldHover(combined_pitch, 1, att_PIDs[1], rate_PIDs[1]) +
+					torqueForAttitudeRateHoldHover(combined_yaw_rate, 2, rate_PIDs[2]);
 		holdSideSlip(side_slip);
 		//holdRateFwd(0);
 		//holdAoA(0);
 		aircraft.setControlSurfaces(Vec3::zero);
 		Global::debug.println("high speed roll: ", high_speed_roll);
+
+		aircraft.addHoverTorque(torque);
+		aircraft.addHoverForce(force);
 	}
 	
-
-	
-	Global::debug.println("joystick input: ", joystick_input); Global::debug.println("torque applied: ", torque);
-
-	aircraft.addHoverTorque(torque);
-	aircraft.addHoverForce(force);
-
-	Global::debug.println("CONTROL DEFLECTIONS: ", aircraft.getControlSurfaces());
+	//Global::debug.println("joystick input: ", joystick_input); Global::debug.println("torque applied: ", torque);
+	//Global::debug.println("CONTROL DEFLECTIONS: ", aircraft.getControlSurfaces());
 }
 
 void doForward()
@@ -128,7 +131,6 @@ void doForward()
 	aircraft.hideProps(2000);
 
 	float joy_throttle = joystick.getUnsignedThrottle(0, 1, false);
-
 	Vec3 joystick_input = joystick.getFilteredAxes(Vec3(0.05, 0.05, 0.3), Vec3(2, 2, 2));
 
 	joy_throttle -= 0.1;
@@ -171,23 +173,13 @@ void doForward()
 		if (target_heading > 180) target_heading -= 360;	// bound target heading to -180, 180
 		else if (target_heading < -180) target_heading += 360;
 
-		float heading = aircraft.attitude.eulerAngles().z;
-		Global::debug.println("");
-		Global::debug.println("AUTO PILOT ON");
-		Global::debug.println("Target speed mph: ", (float)(target_vel * 2.237));
-		Global::debug.println("Target MSL: ", target_alt);
-		Global::debug.println("Target Heading: ", headingCorrection(target_heading));
-		Global::debug.println("Heading: ", headingCorrection(heading));
-		Global::debug.println("Target Heading RAW: ", target_heading);
-		Global::debug.println("Heading RAW: ", heading);
-		Global::debug.println("psi: ", XPLMGetDataf(Global::psi));
-		Global::debug.println();
-		
-
-		Vec3 auto_input(holdHeading(target_heading, 30, 10), holdMSL(target_alt, 80, 0.2), 0);
+		static PID heading_PID(5, 0.0, 0.0);	static PID roll_PID(0.05, 0.002, 0.01, 1);
+		static PID alt_PID(0.5, 0.1, 0.0);		static PID vv_PID(0.025, 0.005, 0.01, 1);
+		Vec3 auto_input(rollRateForHeadingHold(target_heading, 30, 10, heading_PID, roll_PID), inputForMSLHold(target_alt, 80, 0.2, alt_PID, vv_PID), 0);
+		fwdStabilityControl(auto_input);
 		holdAirSpd(target_vel);
 
-		fwdStabilityControl(auto_input);
+		printAutopilotData(target_vel, target_alt, target_heading);
 		Global::debug.println("autopilot command ratios: ", auto_input);
 	}
 	else
@@ -212,9 +204,8 @@ void doOnGround()
 	aircraft.hideProps(2000);
 	aircraft.cutForwardThrottles();
 	aircraft.cutHoverThrottles();
-	
-	joystick.setThrottleFilter(0.05, 1);
-	float throttle_position = joystick.getSignedThrottle();
+
+	float throttle_position = joystick.getSignedThrottle(0.05, 1);
 	if (throttle_position > 0)
 		doHover();
 }
@@ -322,6 +313,7 @@ void aircraftMAIN()
 	printMPG(power);
 	
 	aircraft.applyChanges();
+	Global::debug.reset();
 }
 
 bool plugin_setup_finished = false;
