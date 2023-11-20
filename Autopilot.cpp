@@ -56,5 +56,5 @@ void holdAirSpd(float final_spd)
 	float prograde_spd = aircraft.airflow_rel.mag();
 
 	float thrust = rBound(auto_throttle.update(final_spd, prograde_spd, dt), min_accel * aircraft.mass, max_accel * aircraft.mass);
-	aircraft.setFwdThrust(thrust);
+	aircraft.setForwardThrust(thrust);
 }

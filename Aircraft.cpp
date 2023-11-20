@@ -17,6 +17,65 @@ void Aircraft::begin()
 		aircraft.inertia_tensor.element(i, i) = aircraft.mass * XPLMGetDataf(Global::moments[i]);
 }
 
+void Aircraft::update()
+{
+	
+}
+
+void Aircraft::applyChanges()
+{
+
+	Vec3 thrust_vectors[3];
+	lift_fan_matrix.compute(hover_forces, hover_torques, thrust_vectors[0], thrust_vectors[1], thrust_vectors[2]);
+	
+	setHoverMotors(thrust_vectors);
+	setForwardMotors();
+}
+
+void Aircraft::setHoverMotors(Vec3* thrust_vectors)
+{
+	static PID fan_pids[3] =
+	{
+		PID(0.8, 0.02, 0.5, 0, 50), // left fan
+		PID(0.8, 0.02, 0.5, 0, 50), // right fan
+		PID(0.8, 0.02, 0.5, 0, 50) // nose fan
+	};
+
+	const float max_angle = 60;	// degrees +or-
+
+	/// FLIP NOSE MOTOR?
+	float angle = 0;
+	if (thrust_vectors[2].dot(Vec3::Z) < 0) // if thust is negative, flip fan 180 degrees to simulate running in reverse
+		angle = 180;
+	XPLMSetDatavf(Global::acf_vertcant, &angle, 4, 1);
+
+	/// GET THROTTLE FROM THRUST
+	float actual_thrust[3];
+	XPLMGetDatavf(Global::prop_thrust, actual_thrust, 2, 3);
+
+	float throttles[3]{};
+	for(int i = 0; i < 3; i++)
+	{
+		throttles[i] = fan_pids[i].update(thrust_vectors[i].mag(), actual_thrust[i], Global::dt) / 100;
+		bound(throttles[i], 0, 1);
+	}
+
+	XPLMSetDatavf(Global::throttle_ratio, throttles, 2, 3);
+
+	/// SET WING PROP ANGLES
+	for(int i = 0; i < 2; i++)
+	{
+		float vert_angle = atan2(-thrust_vectors[i].x, thrust_vectors[i].z) / Global::deg2rad;
+		float side_angle = atan2(-thrust_vectors[i].y, thrust_vectors[i].z) / Global::deg2rad;
+
+		bound(vert_angle, -max_angle, max_angle);
+		bound(side_angle, -max_angle, max_angle);
+
+		XPLMSetDatavf(Global::acf_vertcant, &vert_angle, i, 1);
+		XPLMSetDatavf(Global::acf_sidecant, &side_angle, i, 1);
+	}
+}
+
 void Aircraft::hideProps(float max_rpm)
 {
 	if(getMotorRPM(2) < max_rpm)
@@ -26,6 +85,31 @@ void Aircraft::hideProps(float max_rpm)
 void Aircraft::showProps()
 {
 	XPLMSetDataf(Global::thrust_vctr, 0.9);
+}
+
+void Aircraft::addHoverAngularAccel(Vec3 alpha)
+{
+	hover_torques += inertia_tensor * alpha;
+}
+
+void Aircraft::addHoverTorque(Vec3 torque)
+{
+	hover_torques += torque;
+}
+
+void Aircraft::addHoverLinearAccel(Vec3 accel)
+{
+	hover_forces += accel * mass;
+}
+
+void Aircraft::addHoverForce(Vec3 force)
+{
+	hover_forces += force;
+}
+
+void Aircraft::addControlSurfaceInput(Vec3 input)
+{
+	control_surface_inputs += input;
 }
 
 void Aircraft::cutHoverThrottles()
@@ -72,77 +156,37 @@ void Aircraft::setControlSurfaces(Vec3 input)
 		setControlSurface(input.n[i], i);
 }
 
-void Aircraft::setFwdThrust(float thrust)
+void Aircraft::setForwardThrust(float thrust)
 {
-	setMotorThrustDirection(Vec3::Z * thrust / 2, 0);
-	setMotorThrustDirection(Vec3::Z * thrust / 2, 1);
+	forward_thrust = thrust;
 }
 
-void Aircraft::setMotorThrustDirection(Vec3 thrust, int motor)
+void Aircraft::setForwardMotors()
 {
-	bool can_reverse = false;
-	float max_angle = 0;
-	static PID throttleFromThrust_PIDs[5] =
+	static PID forward_PIDs[2] =
 	{
 		PID(0.05, 0.00, 0.5, 100), // left fwd prop
 		PID(0.05, 0.00, 0.5, 100), // right fwd prop
-		PID(0.8, 0.02, 0.5, 0, 50), // left fan
-		PID(0.8, 0.02, 0.5, 0, 50), // right fan
-		PID(0.8, 0.02, 0.5, 0, 50)  // nose fan
 	};
 
-	switch (motor)
-	{
-	case 0:
-	case 1:
-		can_reverse = true;
-		max_angle = 0;
-		break;
-	case 2:
-	case 3:
-		can_reverse = false;
-		max_angle = 60;
-		break;
-	case 4:
-		can_reverse = true;
-		max_angle = 0;
-		break;
-	}
-
-
-	if (can_reverse)
-	{
-		float angle = 0;
-		if (thrust.dot(Vec3::Z) < 0) // if thust is negative, flip fan 180 degrees to simulate running in reverse
-			angle = 180;
-		XPLMSetDatavf(Global::acf_vertcant, &angle, motor, 1);
-	}
+	/// FLIP MOTORS?
+	float angle = 0;
+	if (forward_thrust < 0) // if thust is negative, flip fan 180 degrees to simulate running in reverse
+		angle = 180;
+	XPLMSetDatavf(Global::acf_vertcant, &angle, 0, 2);
 
 	/// GET THROTTLE FROM THRUST
-	float commanded_thrust = thrust.mag();
-	float actual_thrust;
-	XPLMGetDatavf(Global::prop_thrust, &actual_thrust, motor, 1);
-	float throttle = throttleFromThrust_PIDs[motor].update(commanded_thrust, actual_thrust, Global::dt) / 100;
+	float actual_thrust[2];
+	XPLMGetDatavf(Global::prop_thrust, actual_thrust, 0, 2);
 
-	///	SET THROTTLE
-	//static RollingAvg fwd_avg1(100);
-	//static RollingAvg fwd_avg2(100);
-	//if (motor == 0) fwd_avg1.apply(throttle);
-	//else if (motor == 1) fwd_avg2.apply(throttle);
-	
-	bound(throttle, 0, 1);
-	XPLMSetDatavf(Global::throttle_ratio, &throttle, motor, 1);
-	if (max_angle == 0) return;
+	float throttles[2]{};
+	for (int i = 0; i < 2; i++)
+	{
+		throttles[i] = forward_PIDs[i].update(mag(forward_thrust / 2), actual_thrust[i], Global::dt) / 100;
+		bound(throttles[i], 0, 1);
+	}
 
-	/// SET PROP ANGLE
-	float vert_angle = atan2(-thrust.x, thrust.z) / Global::deg2rad;
-	float side_angle = atan2(-thrust.y, thrust.z) / Global::deg2rad;
-
-	bound(vert_angle, -max_angle, max_angle);
-	bound(side_angle, -max_angle, max_angle);
-
-	XPLMSetDatavf(Global::acf_vertcant, &vert_angle, motor, 1);
-	XPLMSetDatavf(Global::acf_sidecant, &side_angle, motor, 1);
+	XPLMSetDatavf(Global::throttle_ratio, throttles, 0, 2);
 }
 
 float Aircraft::getMotorRPM(int motor)

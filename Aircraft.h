@@ -6,6 +6,7 @@
 #include "XPLMDataAccess.h"
 #include "ControlMatrix.h"
 #include "PID.h"
+#include <vector>
 
 class Aircraft
 {
@@ -13,6 +14,16 @@ private:
 	// in ft
 	Vec3 fan_positions[3] = { Vec3(-1.8, 0, 0.05), Vec3(-11, 8.5, 0.57), Vec3(-11, -8.5, 0.57) }; // nose, left, right
 	Vec3 CoM_position = Vec3(-10, 0, 0.5);
+
+	Vec3 hover_torques;
+	Vec3 hover_forces;
+
+	Vec3 control_surface_inputs;
+
+	float forward_thrust;
+
+	void setHoverMotors(Vec3* thrust_vectors);
+	void setForwardMotors();
 
 public:
 	ControlMatrix lift_fan_matrix;
@@ -27,9 +38,21 @@ public:
 	Aircraft() {}
 
 	void begin();
+	void update();
+	void applyChanges();
 
 	void hideProps(float max_rpm);
 	void showProps();
+
+	void addHoverAngularAccel(Vec3 alpha);
+	void addHoverTorque(Vec3 torque);
+	void addHoverLinearAccel(Vec3 accel);
+	void addHoverForce(Vec3 force);
+
+	void addControlSurfaceInput(Vec3 input);
+
+	void setForwardThrust(float thrust);
+
 	void cutHoverThrottles();
 	void setControlSurface(float input, int axis);
 	void mixControlSurface(float input, int axis, float mix_ratio);
@@ -37,7 +60,7 @@ public:
 	void mixControlSurfaces(Vec3 input, float mix_ratio);
 	Vec3 getControlSurfaces();
 	void setMotorThrustDirection(Vec3 thrust, int motor);
-	void setFwdThrust(float thrust);
+	
 	float getMotorRPM(int motor);
 };
 

@@ -76,7 +76,7 @@ void doHover()
 		float pusher_force = lerp(0.0f, force.x / pusher_ratio, t, 1);
 		if (pusher_force < 0) pusher_force = 0;
 		force.x -= pusher_force;
-		aircraft.setFwdThrust(pusher_force);
+		aircraft.setForwardThrust(pusher_force);
 
 		Global::debug.println("pusher thrust: ", pusher_force);
 
@@ -120,11 +120,9 @@ void doHover()
 	
 	Global::debug.println("joystick input: ", joystick_input); Global::debug.println("torque applied: ", torque);
 
-	Vec3 target_fan_vectors[3];
-	///// Transform input forces and torques into left, right, and nose lift fan thrust vectors /////
-	aircraft.lift_fan_matrix.compute(force, torque, target_fan_vectors[0], target_fan_vectors[1], target_fan_vectors[2]);
-	for (int i = 0; i < 3; i++)
-		aircraft.setMotorThrustDirection(target_fan_vectors[i], i + 2);
+	aircraft.addHoverTorque(torque);
+	aircraft.addHoverForce(force);
+
 	Global::debug.println("CONTROL DEFLECTIONS: ", aircraft.getControlSurfaces());
 }
 
@@ -136,7 +134,7 @@ void doForward()
 	joystick.setThrottleFilter(0, 1);
 	float joy_throttle = joystick.getUnsignedThrottle(false);
 
-	float joy_deadzones[3] = { 0.05, 0.05, 0.3 }; float joy_powers[3] = { 3, 2, 2 };
+	float joy_deadzones[3] = { 0.05, 0.05, 0.3 }; float joy_powers[3] = { 2, 2, 2 };
 	Vec3 joystick_input = joystick.getFilteredAxes(joy_deadzones, joy_powers);
 
 	joy_throttle -= 0.1;
@@ -200,7 +198,7 @@ void doForward()
 	}
 	else
 	{
-		aircraft.setFwdThrust(thrust);
+		aircraft.setForwardThrust(thrust);
 		fwdStabilityControl(joystick_input);
 		float t = (aircraft.airflow_rel.mag() - 45) / (55 - 45);	// 0 at 45, 1 at 55
 		aircraft.mixControlSurfaces(joystick_input, lerp(0.8, 0.0, t, 1));
@@ -340,6 +338,8 @@ void aircraftMAIN()
 
 	float power = printPower();
 	printMPG(power);
+	
+	aircraft.applyChanges();
 }
 
 bool plugin_setup_finished = false;
@@ -364,7 +364,6 @@ void draw_hello_world(XPLMWindowID in_window_id, void* in_refcon)
 	XPLMGetWindowGeometry(in_window_id, &Global::l, &Global::t, &Global::r, &Global::b);
 	
 	aircraftMAIN();
-	
 }
 
 
