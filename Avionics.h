@@ -5,12 +5,7 @@
 #include "PID.h"
 #include "Aircraft.h"
 
-float VVIHold(float commanded_VVI);
-void updateVehicleInfo();
-void findVehicleRotInfo();
-void findRelativeAirflow();
-void findVehicleAccel();
-void findGroundState();
+float HoldHoverVV(float commanded_VV);
 Vec3 rateHoldHover(float target_rate, int axis);
 float rotHoldHoverRate(float target_angle, int axis);
 Vec3 attitudeHoldHover(float target_angle, int axis);
@@ -19,15 +14,6 @@ void holdAoA(float angle);
 void holdPitchRateFwd(float rate);
 float holdNormalGs(float Gs);
 PID* holdSideSlip(float angle, bool return_PID_ptr = false);
-
-Vec3 torqueForRateHold(
-	Vec3 target_rate,
-	Vec3& prev_error,
-	Vec3& error_accumulator,
-	float p,
-	float d,
-	float i,
-	float dt);
 
 Vec3 attitudeControlTorque(Vec3 control_in);
 void fwdStabilityControl(Vec3 command_input);

@@ -20,10 +20,15 @@ private:
 
 	Vec3 control_surface_inputs;
 
-	float forward_thrust;
+	float forward_thrust{};
 
 	void setHoverMotors(Vec3* thrust_vectors);
 	void setForwardMotors();
+	
+	void findRot();
+	void findAccel();
+	void findRelativeAirflow();
+	void findGroundState();
 
 public:
 	ControlMatrix lift_fan_matrix;
@@ -54,14 +59,16 @@ public:
 	void setForwardThrust(float thrust);
 
 	void cutHoverThrottles();
+	void cutForwardThrottles();
+
 	void setControlSurface(float input, int axis);
 	void mixControlSurface(float input, int axis, float mix_ratio);
 	void setControlSurfaces(Vec3 input);
 	void mixControlSurfaces(Vec3 input, float mix_ratio);
 	Vec3 getControlSurfaces();
-	void setMotorThrustDirection(Vec3 thrust, int motor);
 	
 	float getMotorRPM(int motor);
+	
 };
 
 extern Aircraft aircraft;

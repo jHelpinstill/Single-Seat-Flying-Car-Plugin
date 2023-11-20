@@ -45,7 +45,7 @@ void doHover()
 	
 	if (joystick.button_3.held) // rotate in place w/ no translate
 	{
-		force.z = VVIHold(throttle_position * 10);
+		force.z = HoldHoverVV(throttle_position * 10);
 		force = aircraft.attitude_roll_pitch.inverse() * force;
 
 		Vec3 rotation = joystick_input;
@@ -69,7 +69,7 @@ void doHover()
 
 		/// FORCES ///
 		force.y = -joystick_input.x * aircraft.mass * Global::g0;
-		force.z = VVIHold(throttle_position * lerp(10.0, 20.0, t, 1));
+		force.z = HoldHoverVV(throttle_position * lerp(10.0, 20.0, t, 1));
 		force.x = joystick_input.y * aircraft.mass * Global::g0;
 
 		const float pusher_ratio = 1.5;
@@ -216,8 +216,8 @@ void doOnGround()
 {
 	float dt = Global::dt;
 	aircraft.hideProps(2000);
-	float throttle[5] = { 0, 0, 0, 0, 0 };
-	XPLMSetDatavf(Global::throttle_ratio, throttle, 0, 5);
+	aircraft.cutForwardThrottles();
+	aircraft.cutHoverThrottles();
 	
 	joystick.setThrottleFilter(0.05, 1);
 	float throttle_position = joystick.getSignedThrottle();
@@ -235,8 +235,6 @@ Flight_state flight_state = Flight_state::hover;
 
 void findFlightState(Flight_state &flight_state)
 {
-	//static int prev_trigger_state = false;
-
 	if (aircraft.on_ground)
 		flight_state = Flight_state::on_ground;
 
@@ -244,8 +242,8 @@ void findFlightState(Flight_state &flight_state)
 	{
 		if (flight_state == Flight_state::on_ground)
 			flight_state = Flight_state::hover;
-		//int trigger_state = getButton(GlobalVars::trigger);
-		if (joystick.button_trigger.pressed)//getButton(GlobalVars::trigger) && !prev_trigger_state)
+
+		if (joystick.button_trigger.pressed)
 		{
 			switch (flight_state)
 			{
@@ -257,11 +255,8 @@ void findFlightState(Flight_state &flight_state)
 				flight_state = Flight_state::hover;
 				break;
 			}
-		}//prev_trigger_state = trigger_state;
+		}
 	}
-
-	//if (Global::vehicle.airflow_rel.mag() > 100)
-	//	flight_state = Flight_state::forward;
 }
 
 float printPower()
@@ -302,21 +297,17 @@ void aircraftMAIN()
 		return;
 	}
 	Global::debug.println("debug:");
-	
-	
+
+	Global::dt = XPLMGetDataf(Global::frame_time);
 	joystick.update();
-	updateVehicleInfo();
+	aircraft.update();
 	findFlightState(flight_state);
+
 	Global::debug.println("vehicle attitude - world	: ", aircraft.attitude.eulerAngles());
 	Global::debug.println("vehicle rotation rate	: ", aircraft.rot_rate);
 	Global::debug.println("vehicle rotation accel	: ", aircraft.rot_accel);
 	Global::debug.println("Relative Air velocity	: ", aircraft.airflow_rel);
 
-
-
-	//joystick.printButtonNumbers();
-	//joystick.printActiveAxes();
-	static bool exception_thrown = false;
 	switch (flight_state)
 	{
 	case Flight_state::hover:

@@ -19,7 +19,10 @@ void Aircraft::begin()
 
 void Aircraft::update()
 {
-	
+	findRot();
+	findRelativeAirflow();
+	findAccel();
+	findGroundState();
 }
 
 void Aircraft::applyChanges()
@@ -118,6 +121,12 @@ void Aircraft::cutHoverThrottles()
 	XPLMSetDatavf(Global::throttle_ratio, throttle, 2, 3);
 }
 
+void Aircraft::cutForwardThrottles()
+{
+	float throttle[2] = { 0, 0 };
+	XPLMSetDatavf(Global::throttle_ratio, throttle, 0, 2);
+}
+
 void Aircraft::setControlSurface(float input, int axis)
 {
 	if (axis == 1 || axis == 2) input = -input;
@@ -194,4 +203,47 @@ float Aircraft::getMotorRPM(int motor)
 	float rpm;
 	XPLMGetDatavf(Global::engine_speed, &rpm, motor, 1);
 	return rpm;
+}
+
+void Aircraft::findRot()
+{
+	float dt = Global::dt;
+	float roll_ = XPLMGetDataf(Global::roll);
+	float pitch_ = -XPLMGetDataf(Global::pitch);
+	float psi_ = 360 - XPLMGetDataf(Global::psi);
+	//Global::debug.println("psi: ", psi_);
+
+	attitude = Quat(Vec3(roll_, pitch_, psi_));
+	attitude_roll_pitch = Quat(Vec3(roll_, pitch_, 0));
+
+	static Quat prev_attitude;
+	rot_rate = (prev_attitude.inverse() * attitude).eulerAngles() / dt;
+
+	prev_attitude = attitude;
+
+	static Vec3 prev_rate;
+	rot_accel = (rot_rate - prev_rate) / dt;
+	prev_rate = rot_rate;
+}
+
+void Aircraft::findAccel()
+{
+	accel.x = -XPLMGetDataf(Global::g_forces[0]);
+	accel.y = -XPLMGetDataf(Global::g_forces[1]);
+	accel.z = XPLMGetDataf(Global::g_forces[2]);
+	accel *= Global::g0;
+}
+
+void Aircraft::findRelativeAirflow()
+{
+	airflow_rel.x = -XPLMGetDataf(Global::air_relative_velocity[2]);
+	airflow_rel.y = -XPLMGetDataf(Global::air_relative_velocity[0]);
+	airflow_rel.z = XPLMGetDataf(Global::air_relative_velocity[1]);
+}
+
+void Aircraft::findGroundState()
+{
+	float gear_forces = XPLMGetDataf(Global::gear_nml_forces);
+	on_ground = (gear_forces > 1);
+	//Global::debug.println("gear forces:", gear_forces);
 }
