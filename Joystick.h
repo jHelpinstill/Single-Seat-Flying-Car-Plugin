@@ -61,15 +61,11 @@ public:
 	void update();
 
 	Vec3 getRawAxes();
-	Vec3 getFilteredAxes();
-	Vec3 getFilteredAxes(float* deadzones, float* powers);
-
-	void setAxisFilter(int axis, float deadzone, float power);
-	void setThrottleFilter(float deadzone, float power);
+	Vec3 getFilteredAxes(Vec3 deadzones, Vec3 powers);
 	
 	float getRawThrottle();
-	float getSignedThrottle();
-	float getUnsignedThrottle(bool flip = false);
+	float getSignedThrottle(float deadzone = 0, float power = 1);
+	float getUnsignedThrottle(float deadzone = 0, float power = 1, bool flip = false);
 
 	void printButtonNumbers();
 	void printActiveAxes(float deadzone = 0.1);

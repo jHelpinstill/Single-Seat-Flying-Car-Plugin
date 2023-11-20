@@ -31,15 +31,11 @@ void doHover()
 {
 	float dt = Global::dt;
 	aircraft.showProps();
-	float fwd_throttle[2] = { 0, 0 };
-	XPLMSetDatavf(Global::throttle_ratio, fwd_throttle, 0, 2);
+	aircraft.cutForwardThrottles();
 	aircraft.setControlSurfaces(Vec3::zero);
 
-	float joy_deadzones[3] = { 0.05, 0.05, 0.3 }; float joy_powers[3] = { 1.5, 1.5, 1.5 };
-	Vec3 joystick_input = joystick.getFilteredAxes(joy_deadzones, joy_powers);//getJoystickRotValues(1.5);
-
-	joystick.setThrottleFilter(0.005, 3);
-	float throttle_position = joystick.getSignedThrottle();//applyDeadzone(getSignedJoystickThrottle(3), 0.005);
+	Vec3 joystick_input = joystick.getFilteredAxes(Vec3(0.05, 0.05, 0.3), Vec3(1.5, 1.5, 1.5));
+	float throttle_position = joystick.getSignedThrottle(0.005, 3);
 	
 	Vec3 force, torque;
 	
@@ -131,11 +127,9 @@ void doForward()
 	float dt = Global::dt;
 	aircraft.hideProps(2000);
 
-	joystick.setThrottleFilter(0, 1);
-	float joy_throttle = joystick.getUnsignedThrottle(false);
+	float joy_throttle = joystick.getUnsignedThrottle(0, 1, false);
 
-	float joy_deadzones[3] = { 0.05, 0.05, 0.3 }; float joy_powers[3] = { 2, 2, 2 };
-	Vec3 joystick_input = joystick.getFilteredAxes(joy_deadzones, joy_powers);
+	Vec3 joystick_input = joystick.getFilteredAxes(Vec3(0.05, 0.05, 0.3), Vec3(2, 2, 2));
 
 	joy_throttle -= 0.1;
 	if (joy_throttle < 0) joy_throttle *= 5;
@@ -323,9 +317,6 @@ void aircraftMAIN()
 		doOnGround();
 		break;
 	}
-
-	PID* side_slip_PID = holdSideSlip(0.0, true);
-	adjustPID(side_slip_PID);
 
 	float power = printPower();
 	printMPG(power);

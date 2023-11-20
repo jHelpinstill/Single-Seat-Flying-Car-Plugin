@@ -13,11 +13,11 @@ float HoldHoverVV(float commanded_VV)
 
 	float agl = XPLMGetDataf(Global::alt_agl_handle);
 	if (agl < 5)
-		bound(commanded_VVI, -(agl + 1), 10);
+		bound(commanded_VV, -(agl + 1), 10);
 
-	float thrust = weight + rBound(vvi_hold.update(commanded_VVI, vvi, dt) * 1000, -weight * 0.75, weight * 2);
+	float thrust = weight + rBound(vvi_hold.update(commanded_VV, vvi, dt) * 1000, -weight * 0.75, weight * 2);
 
-	Global::debug.println("desired vvi: ", commanded_VVI);
+	Global::debug.println("desired vvi: ", commanded_VV);
 	Global::debug.println("actual vvi: ", vvi);
 
 	return thrust;

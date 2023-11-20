@@ -121,22 +121,12 @@ Vec3 Joystick::getRawAxes()
 	return axes;
 }
 
-Vec3 Joystick::getFilteredAxes()
+Vec3 Joystick::getFilteredAxes(Vec3 deadzones, Vec3 powers)
 {
 	Vec3 values;
 	for (int i = 0; i < 3; i++)
 	{
-		values.n[i] = applyDeadzone(axes.n[i], axis_deadzones[i], axis_powers[i]);
-	}
-	return values;
-}
-
-Vec3 Joystick::getFilteredAxes(float* deadzones, float* powers)
-{
-	Vec3 values;
-	for (int i = 0; i < 3; i++)
-	{
-		values.n[i] = applyDeadzone(axes.n[i], deadzones[i], powers[i]);
+		values.n[i] = applyDeadzone(axes.n[i], deadzones.n[i], powers.n[i]);
 	}
 	return values;
 }
@@ -151,26 +141,14 @@ float Joystick::getRawThrottle()
 	return throttle;
 }
 
-float Joystick::getSignedThrottle()
+float Joystick::getSignedThrottle(float deadzone, float power)
 {
 	float value = 1 - (throttle * 2);
-	return applyDeadzone(value, throttle_deadzone, throttle_power);
+	return applyDeadzone(value, deadzone, power);
 }
 
-float Joystick::getUnsignedThrottle(bool flip)
+float Joystick::getUnsignedThrottle(float deadzone, float power, bool flip)
 {
 	float value = flip ? throttle : 1 - throttle;
-	return applyDeadzone(value, 0, throttle_power);
-}
-
-void Joystick::setAxisFilter(int axis, float deadzone, float power)
-{
-	axis_deadzones[axis] = deadzone;
-	axis_powers[axis] = power;
-}
-
-void Joystick::setThrottleFilter(float deadzone, float power)
-{
-	throttle_deadzone = deadzone;
-	throttle_power = power;
+	return applyDeadzone(value, deadzone, power);
 }
