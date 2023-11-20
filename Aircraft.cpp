@@ -30,11 +30,15 @@ void Aircraft::update()
 	findRelativeAirflow();
 	findAccel();
 	findGroundState();
+
+	hover_torques = Vec3::zero;
+	hover_forces = Vec3::zero;
+	control_surface_inputs = Vec3::zero;
+	forward_thrust = 0;
 }
 
 void Aircraft::applyChanges()
 {
-
 	Vec3 thrust_vectors[3];
 	lift_fan_matrix.compute(hover_forces, hover_torques, thrust_vectors[0], thrust_vectors[1], thrust_vectors[2]);
 	

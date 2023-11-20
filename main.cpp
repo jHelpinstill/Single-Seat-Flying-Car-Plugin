@@ -37,8 +37,6 @@ void doHover()
 	Vec3 joystick_input = joystick.getFilteredAxes(Vec3(0.05, 0.05, 0.3), Vec3(1.5, 1.5, 1.5));
 	float throttle_position = joystick.getSignedThrottle(0.005, 3);
 	
-	
-	
 	if (joystick.button_3.held) // rotate in place w/ no translate
 	{
 		holdPositionVaryAttitude(joystick_input, throttle_position);
