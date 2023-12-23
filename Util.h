@@ -11,7 +11,7 @@ float rBound(float num, float lower, float upper);
 void bound(float& num, float lower, float upper);
 void bound(Vec3& v, float lower, float upper);
 template <class T>
-inline T lerp(T a, T b, float t, bool bound_t)
+inline T lerp(T a, T b, float t, bool bound_t = true)
 {
 	if (bound_t) bound(t, 0, 1);
 	return a * (1 - t) + b * t;

@@ -7,7 +7,7 @@
 
 /////   HELPERS   /////
 float thrustForVVHoldHover(float commanded_VV, PID& vv_hold);
-Vec3 torqueForAttitudeRateHoldHover(float target_rate, int axis, PID& rot_PID);
+Vec3 torqueForRateHoldHover(float target_rate, int axis, PID& rot_PID);
 float rotHoldHoverRate(float target_angle, int axis);
 Vec3 torqueForAttitudeHoldHover(float target_angle, int axis, PID& att_PID, PID& rate_PID);
 float yawRateForSSHoldHover(float target_slip_angle, PID& ss_PID);

@@ -37,7 +37,7 @@ void Aircraft::update()
 	forward_thrust = 0;
 }
 
-void Aircraft::applyChanges()
+void Aircraft::updateMotors()
 {
 	Vec3 thrust_vectors[3];
 	lift_fan_matrix.compute(hover_forces, hover_torques, thrust_vectors[0], thrust_vectors[1], thrust_vectors[2]);

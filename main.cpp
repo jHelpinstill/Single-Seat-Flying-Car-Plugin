@@ -103,20 +103,20 @@ void doHover()
 			PID(0.1, 0.002, 0.01, 10, 0.05, 0.15),
 			PID(0.2, 0.002, 0.01, 10)
 		};
-		float combined_roll_rate = lerp(rotHoldHoverRate(roll, 0), high_speed_roll, t, 1);
+		float combined_roll_rate = lerp(rotHoldHoverRate(roll, 0), high_speed_roll, t);
 		float combined_pitch = lerp(pitch, high_speed_pitch, t, 1);
 		float combined_yaw_rate = lerp(yaw_rate, yawRateForSSHoldHover(side_slip, ss_PID), t, 1);
-		torque =	torqueForAttitudeRateHoldHover(combined_roll_rate, 0, rate_PIDs[0]) +
+		torque =	torqueForAttitudeHoldHover(roll, 0, att_PIDs[0], rate_PIDs[0]) +
 					torqueForAttitudeHoldHover(combined_pitch, 1, att_PIDs[1], rate_PIDs[1]) +
-					torqueForAttitudeRateHoldHover(combined_yaw_rate, 2, rate_PIDs[2]);
+					torqueForRateHoldHover(combined_yaw_rate, 2, rate_PIDs[2]);
 		holdSideSlip(side_slip);
-		//holdRateFwd(0);
-		//holdAoA(0);
+
 		aircraft.setControlSurfaces(Vec3::zero);
 		Global::debug.println("high speed roll: ", high_speed_roll);
 
 		aircraft.addHoverTorque(torque);
 		aircraft.addHoverForce(force);
+		Global::debug.println("forces : ", force);
 	}
 	
 	//Global::debug.println("joystick input: ", joystick_input); Global::debug.println("torque applied: ", torque);
@@ -290,6 +290,8 @@ void aircraftMAIN()
 	Global::debug.println("vehicle rotation rate	: ", aircraft.rot_rate);
 	Global::debug.println("vehicle rotation accel	: ", aircraft.rot_accel);
 	Global::debug.println("Relative Air velocity	: ", aircraft.airflow_rel);
+	Global::debug.println("Joystick raw axes		: ", joystick.getRawAxes());
+	Global::debug.println("Joystick filtered axes	: ", joystick.getFilteredAxes(Vec3(0.05, 0.05, 0.3), Vec3(1.5, 1.5, 1.5)));
 
 	switch (flight_state)
 	{
@@ -310,7 +312,7 @@ void aircraftMAIN()
 	float power = printPower();
 	printMPG(power);
 	
-	aircraft.applyChanges();
+	aircraft.updateMotors();
 	Global::debug.reset();
 }
 

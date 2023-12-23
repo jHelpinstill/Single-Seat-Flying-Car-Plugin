@@ -42,7 +42,7 @@ void holdPositionVaryAttitude(Vec3 input, float throttle_handle, float max_VV, V
 	Vec3 torque;
 	torque += torqueForAttitudeHoldHover(input.x, 0, att_PIDs[0], rate_PIDs[0]);
 	torque += torqueForAttitudeHoldHover(input.y, 1, att_PIDs[1], rate_PIDs[1]);
-	torque += torqueForAttitudeRateHoldHover(input.z, 2, rate_PIDs[2]);
+	torque += torqueForRateHoldHover(input.z, 2, rate_PIDs[2]);
 
 	aircraft.addHoverTorque(torque);
 }

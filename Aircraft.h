@@ -47,7 +47,7 @@ public:
 
 	void begin();
 	void update();
-	void applyChanges();
+	void updateMotors();
 
 	void hideProps(float max_rpm);
 	void showProps();

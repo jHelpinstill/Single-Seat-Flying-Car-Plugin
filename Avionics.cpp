@@ -17,7 +17,7 @@ float thrustForVVHoldHover(float commanded_VV, PID& vv_hold)
 	return thrust;
 }
 
-Vec3 torqueForAttitudeRateHoldHover(float target_rate, int axis, PID& rot_PID)	// returns torque require to hold input rotation rate
+Vec3 torqueForRateHoldHover(float target_rate, int axis, PID& rot_PID)	// returns torque require to hold input rotation rate
 {
 	//static PID rotPIDs[3] =
 	//{
@@ -52,7 +52,7 @@ Vec3 torqueForAttitudeHoldHover(float target_angle, int axis, PID& att_PID, PID&
 	//	PID(4, 0.05, 0, 0, 0.05, 0.15)
 	//};
 	float rate = att_PID.update(target_angle, aircraft.attitude.eulerAngles().n[axis], Global::dt);
-	return torqueForAttitudeRateHoldHover(rate, axis, rate_PID);
+	return torqueForRateHoldHover(rate, axis, rate_PID);
 }
 
 float yawRateForSSHoldHover(float target_slip_angle, PID& ss_PID)
