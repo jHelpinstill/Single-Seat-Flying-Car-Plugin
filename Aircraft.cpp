@@ -85,6 +85,8 @@ void Aircraft::setHoverMotors(Vec3* thrust_vectors)
 		bound(vert_angle, -max_angle, max_angle);
 		bound(side_angle, -max_angle, max_angle);
 
+		//this is me changing the file
+
 		XPLMSetDatavf(Global::acf_vertcant, &vert_angle, i + 2, 1);
 		XPLMSetDatavf(Global::acf_sidecant, &side_angle, i + 2, 1);
 	}
