@@ -85,8 +85,8 @@ void Aircraft::setHoverMotors(Vec3* thrust_vectors)
 		bound(vert_angle, -max_angle, max_angle);
 		bound(side_angle, -max_angle, max_angle);
 
-		XPLMSetDatavf(Global::acf_vertcant, &vert_angle, i, 1);
-		XPLMSetDatavf(Global::acf_sidecant, &side_angle, i, 1);
+		XPLMSetDatavf(Global::acf_vertcant, &vert_angle, i + 2, 1);
+		XPLMSetDatavf(Global::acf_sidecant, &side_angle, i + 2, 1);
 	}
 }
 
@@ -193,7 +193,8 @@ void Aircraft::setForwardMotors()
 	float angle = 0;
 	if (forward_thrust < 0) // if thust is negative, flip fan 180 degrees to simulate running in reverse
 		angle = 180;
-	XPLMSetDatavf(Global::acf_vertcant, &angle, 0, 2);
+	XPLMSetDatavf(Global::acf_vertcant, &angle, 0, 1);
+	XPLMSetDatavf(Global::acf_vertcant, &angle, 1, 1);
 
 	/// GET THROTTLE FROM THRUST
 	float actual_thrust[2];

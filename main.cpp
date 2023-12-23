@@ -106,9 +106,16 @@ void doHover()
 		float combined_roll_rate = lerp(rotHoldHoverRate(roll, 0), high_speed_roll, t);
 		float combined_pitch = lerp(pitch, high_speed_pitch, t, 1);
 		float combined_yaw_rate = lerp(yaw_rate, yawRateForSSHoldHover(side_slip, ss_PID), t, 1);
-		torque =	torqueForAttitudeHoldHover(roll, 0, att_PIDs[0], rate_PIDs[0]) +
-					torqueForAttitudeHoldHover(combined_pitch, 1, att_PIDs[1], rate_PIDs[1]) +
-					torqueForRateHoldHover(combined_yaw_rate, 2, rate_PIDs[2]);
+		
+		Vec3 t_roll = torqueForAttitudeHoldHover(roll, 0, att_PIDs[0], rate_PIDs[0]);
+		Vec3 t_pitch = torqueForAttitudeHoldHover(combined_pitch, 1, att_PIDs[1], rate_PIDs[1]);
+		Vec3 t_yaw = torqueForRateHoldHover(yaw_rate, 2, rate_PIDs[2]);
+
+		torque = t_roll + t_pitch + t_yaw;
+		
+		//torque =	torqueForAttitudeHoldHover(roll, 0, att_PIDs[0], rate_PIDs[0]) +
+		//			torqueForAttitudeHoldHover(combined_pitch, 1, att_PIDs[1], rate_PIDs[1]) +
+		//			torqueForRateHoldHover(combined_yaw_rate, 2, rate_PIDs[2]);
 		holdSideSlip(side_slip);
 
 		aircraft.setControlSurfaces(Vec3::zero);
@@ -116,6 +123,13 @@ void doHover()
 
 		aircraft.addHoverTorque(torque);
 		aircraft.addHoverForce(force);
+		Global::debug.println("desired roll angle	: ", roll);
+		Global::debug.println("desired pitch angle	: ", combined_pitch);
+		Global::debug.println("desired yaw rate		: ", combined_yaw_rate);
+		Global::debug.println("t_roll				: ", t_roll);
+		Global::debug.println("t_pitch				: ", t_pitch);
+		Global::debug.println("t_yaw				: ", t_yaw);
+		Global::debug.println("torque				: ", torque);
 		Global::debug.println("forces : ", force);
 	}
 	
