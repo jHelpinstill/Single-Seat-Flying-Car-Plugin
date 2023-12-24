@@ -16,6 +16,7 @@
     <ClCompile Include="Avionics.cpp" />
     <ClCompile Include="BinaryScroller.cpp" />
     <ClCompile Include="GlobalVars.cpp" />
+    <ClCompile Include="HoverModule.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Joystick.cpp" />
     <ClCompile Include="PID.cpp" />
@@ -34,6 +35,7 @@
     <ClInclude Include="BinaryScroller.h" />
     <ClInclude Include="ControlMatrix.h" />
     <ClInclude Include="GlobalVars.h" />
+    <ClInclude Include="HoverModule.h" />
     <ClInclude Include="Joystick.h" />
     <ClInclude Include="PluginSetup.h" />
     <ClInclude Include="Quat.h" />

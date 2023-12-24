@@ -6,6 +6,7 @@
 #include "XPLMDataAccess.h"
 #include "ControlMatrix.h"
 #include "PID.h"
+#include "HoverModule.h"
 #include <vector>
 
 class Aircraft
@@ -17,6 +18,9 @@ private:
 
 	Vec3 hover_torques;
 	Vec3 hover_forces;
+
+	HoverModule left_module = HoverModule(60, 5000, 2);
+	HoverModule right_module = HoverModule(60, 5000, 3);
 
 	Vec3 control_surface_inputs;
 

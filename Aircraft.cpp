@@ -77,19 +77,14 @@ void Aircraft::setHoverMotors(Vec3* thrust_vectors)
 	XPLMSetDatavf(Global::throttle_ratio, throttles, 2, 3);
 
 	/// SET WING PROP ANGLES
-	for(int i = 0; i < 2; i++)
-	{
-		float vert_angle = atan2(-thrust_vectors[i].x, thrust_vectors[i].z) / Global::deg2rad;
-		float side_angle = atan2(-thrust_vectors[i].y, thrust_vectors[i].z) / Global::deg2rad;
+	float vert_left = atan2(-thrust_vectors[0].x, thrust_vectors[0].z) / Global::deg2rad;
+	float side_left = atan2(-thrust_vectors[0].y, thrust_vectors[0].z) / Global::deg2rad;
 
-		bound(vert_angle, -max_angle, max_angle);
-		bound(side_angle, -max_angle, max_angle);
+	float vert_right = atan2(-thrust_vectors[1].x, thrust_vectors[1].z) / Global::deg2rad;
+	float side_right = atan2(-thrust_vectors[1].y, thrust_vectors[1].z) / Global::deg2rad;
 
-		//this is me changing the file
-
-		XPLMSetDatavf(Global::acf_vertcant, &vert_angle, i + 2, 1);
-		XPLMSetDatavf(Global::acf_sidecant, &side_angle, i + 2, 1);
-	}
+	left_module.update(vert_left, side_left, Global::dt);
+	right_module.update(vert_right, side_right, Global::dt);
 }
 
 void Aircraft::hideProps(float max_rpm)

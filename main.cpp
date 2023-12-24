@@ -86,8 +86,8 @@ void doHover()
 			bound(high_speed_roll, -roll_rate, 0);
 		else if ((aircraft.attitude_roll_pitch.eulerAngles().x < -max_roll))
 			bound(high_speed_roll, 0, roll_rate);
-		Vec3 proj = (aircraft.airflow_rel).unit();
-		float high_speed_pitch = (asin(proj.z) / Global::deg2rad);// -lerp(0, 5, t, 1);
+		Vec3 proj = air_vel.unit();
+		float high_speed_pitch = (asin(-proj.z) / Global::deg2rad);// -lerp(0, 5, t, 1);
 		float side_slip = joystick_input.z * 10;
 
 		/// COMBINING ///
